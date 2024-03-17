@@ -1,9 +1,6 @@
 package com.example.just;
 
-<<<<<<< HEAD
-=======
 import com.example.just.Repository.HashTagESRepository;
->>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 import com.example.just.Repository.PostContentESRespository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,12 +15,8 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 @EnableElasticsearchRepositories(
 		includeFilters = {
-<<<<<<< HEAD
-				@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = PostContentESRespository.class),
-=======
 				@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {PostContentESRespository.class,
 						HashTagESRepository.class}),
->>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 		}
 )
 @EnableScheduling
@@ -42,8 +35,4 @@ public class JustApplication {
 		SpringApplication.run(JustApplication.class, args);
 	}
 
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
