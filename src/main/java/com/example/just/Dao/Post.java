@@ -29,12 +29,15 @@ public class Post {
     @Column(name = "content", length = 300)
     @JsonIgnore
     private List<String> postContent;
+<<<<<<< HEAD
 
     //글 태그
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     @Column(name = "tag")
     private List<HashTag> hash_tag;
 
+=======
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
     @Column(name = "post_picture")
     private Long post_picture;
 
@@ -51,6 +54,10 @@ public class Post {
     @Column(name = "emoticon")
     private String emoticon;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
     @ManyToMany()
     @JoinTable(
             name = "post_like",
@@ -61,12 +68,22 @@ public class Post {
     @Builder.Default
     private List<Member> likedMembers = new ArrayList<>();
 
+<<<<<<< HEAD
+=======
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
+    private List<HashTagMap> hashTagMaps = new ArrayList<>();
+
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
     @ManyToOne()
     @JoinColumn(name = "member_id") //글을쓴 Member_id
     @JsonIgnore
     private Member member;
 
+<<<<<<< HEAD
     @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
+=======
+    @OneToMany(mappedBy = "post", orphanRemoval = true)
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
     private List<Comment> comments = new ArrayList<>();
     @Column(name = "blamed_count")
     private Long blamedCount;
@@ -81,6 +98,7 @@ public class Post {
     public void writePost(PostPostDto postDto, Member member) { // 글 쓰기 생성자
         List<String> contentList = postDto.getPost_content();
         this.postContent = contentList;
+<<<<<<< HEAD
         if (postDto.getHash_tag() != null) {
             for (int i = 0; i < postDto.getHash_tag().size(); i++) {
                 String hashTag_name = postDto.getHash_tag().get(i);
@@ -88,6 +106,8 @@ public class Post {
                 addHashTag(hashTag);
             }
         }
+=======
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         this.post_picture = postDto.getPost_picture();
         this.secret = postDto.getSecret();
         this.emoticon = "";
@@ -120,6 +140,7 @@ public class Post {
         }
     }
 
+<<<<<<< HEAD
     public void addHashTag(HashTag hashTag) {
         if (hash_tag == null) {
             hash_tag = new ArrayList<>();
@@ -127,6 +148,8 @@ public class Post {
         hash_tag.add(hashTag);
         hashTag.setPost(this);
     }
+=======
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 
     public void addBlamed() {
         blamedCount++;
@@ -145,6 +168,7 @@ public class Post {
         this.post_picture = postDto.getPost_picture();
         this.secret = postDto.getSecret();
         this.postContent = postDto.getPost_content();
+<<<<<<< HEAD
         this.hash_tag = null;
         if (postDto.getHash_tage() != null) {
             for (int i = 0; i < postDto.getHash_tage().size(); i++) {
@@ -152,16 +176,40 @@ public class Post {
                 HashTag hashTag = new HashTag(hashTag_name);
                 addHashTag(hashTag);
             }
+=======
+        this.hashTagMaps = new ArrayList<>();
+        for (int i = 0; i < postDto.getHash_tage().size(); i++) {
+            HashTagMap hashTagMap = new HashTagMap();
+            hashTagMap.setPost(this);
+            hashTagMap.setHashTag(new HashTag(postDto.getHash_tage().get(i)));
+            this.addHashTagMaps(hashTagMap);
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         }
     }
 
     public List<HashTag> getHashTag() {
         List<HashTag> array = new ArrayList<>();
+<<<<<<< HEAD
+=======
+        /*
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         if (this.hash_tag != null) {
             for (int i = 0; i < this.hash_tag.size(); i++) {
                 array.add(this.hash_tag.get(i));
             }
         }
+<<<<<<< HEAD
         return array;
     }
+=======
+
+         */
+        return array;
+    }
+
+
+    public void addHashTagMaps(HashTagMap hashTagMap) {
+        this.hashTagMaps.add(hashTagMap);
+    }
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 }

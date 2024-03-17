@@ -1,5 +1,9 @@
 package com.example.just.Config;
 
+<<<<<<< HEAD
+=======
+import com.example.just.Repository.HashTagESRepository;
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 import com.example.just.Repository.PostContentESRespository;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +16,11 @@ import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
 
 @Configuration
+<<<<<<< HEAD
 @EnableReactiveElasticsearchRepositories(basePackageClasses = {PostContentESRespository.class})
+=======
+@EnableReactiveElasticsearchRepositories(basePackageClasses = {PostContentESRespository.class, HashTagESRepository.class})
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 public class ElasticSearchConfig extends AbstractElasticsearchConfiguration {
     @Override
     public RestHighLevelClient elasticsearchClient() {

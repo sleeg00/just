@@ -1,12 +1,19 @@
 package com.example.just.Controller;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 import com.example.just.Dto.*;
 import com.example.just.Service.PostService;
 import com.example.just.jwt.JwtProvider;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.Operation;
+<<<<<<< HEAD
+=======
+import java.io.IOException;
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
@@ -61,11 +68,21 @@ public class PostController {
     public ResponseEntity<Object> getMemberPosts(@RequestParam Long request_page, HttpServletRequest request) {
         String cursor = request.getHeader("viewed");
         Long member_id = getAccessTokenOfMemberId(request);
+<<<<<<< HEAD
 
         try {
             return ResponseEntity.ok(postService.searchByCursorMember(cursor, request_page, member_id));
         } catch (NotFoundException e) {
             return ResponseEntity.notFound().build();
+=======
+        String like = request.getHeader("like");
+        try {
+            return ResponseEntity.ok(postService.searchByCursorMember(cursor, request_page, member_id,like));
+        } catch (NotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         }
     }
 
@@ -133,6 +150,16 @@ public class PostController {
         return ResponseEntity.ok(postService.getLikeMemberPost(member_id));
     }
 
+<<<<<<< HEAD
+=======
+    @ApiOperation(value = "자신이 좋아요한 글 , 자신이 쓴 글의 HashTag들을 랜덤하게 뽑아옵니다.")
+    @GetMapping("/get/like/hash/tag")
+    public ResponseEntity<Object> getLikeHashTag(HttpServletRequest request) {
+        Long member_id = getAccessTokenOfMemberId(request);
+        return ResponseEntity.ok(postService.getLikeHashTag(member_id));
+    }
+
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
     public Long getAccessTokenOfMemberId(HttpServletRequest request) {
         String token = jwtProvider.getAccessToken(request);
         Long member_id = Long.valueOf(jwtProvider.getIdFromToken(token)); //토큰

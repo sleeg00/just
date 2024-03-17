@@ -40,10 +40,17 @@ public class ResponseGetPostDto {
                 .map(conent -> new String(conent))
                 .collect(Collectors.toList());
         List<String> names = new ArrayList<>();
+<<<<<<< HEAD
         List<HashTag> hashTags = post.getHash_tag();
         for (int j = 0; j < hashTags.size(); j++) {
             names.add(hashTags.get(j).getName());
         }
+=======
+      //  List<HashTag> hashTags = post.getHash_tag();
+       // for (int j = 0; j < hashTags.size(); j++) {
+         //   names.add(hashTags.get(j).getName());
+       // }
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         hash_tag = names;
         post_picture = post.getPost_picture();
         post_create_time = post.getPost_create_time();
