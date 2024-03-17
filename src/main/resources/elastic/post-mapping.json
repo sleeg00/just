@@ -1,18 +1,8 @@
 {
   "properties": {
     "postContent": {
-<<<<<<< HEAD
-      "type": "nested",
-      "properties": {
-        "content": {
-          "type": "text",
-          "analyzer": "korean"
-        }
-      }
-=======
       "type": "text",
       "analyzer": "korean"
->>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
     },
     "postPicture": {
       "type": "long"
@@ -20,22 +10,6 @@
     "postCreateTime": {
       "type": "long"
     },
-<<<<<<< HEAD
-    "postLike": {
-      "type": "long"
-    },
-    "emoticon": {
-      "type": "text"
-    },
-    "blamedCount": {
-      "type": "long"
-    },
-    "memberNickname": {
-      "type": "text"
-    },
-    "commentCount": {
-      "type": "integer"
-=======
     "secret": {
       "type": "boolean"
     },
@@ -50,7 +24,6 @@
     },
     "memberId": {
       "type": "long"
->>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
     }
   }
 }

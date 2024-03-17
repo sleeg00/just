@@ -90,11 +90,7 @@ public class CommentService {
 
         } else if (parentComment == null) {
             PostDocument postDocument = postContentESRespository.findById(postId).get();
-<<<<<<< HEAD
-            postDocument.setCommentCount(postDocument.getCommentCount() + 1);
-=======
             postDocument.setCommentSize(postDocument.getCommentSize() + 1);
->>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
             postContentESRespository.save(postDocument);
 //            notificationService.send(receiver.get(), "comment", post.getPost_id(), member_id);
         }
@@ -148,11 +144,7 @@ public class CommentService {
                 .orElseThrow(() -> new RuntimeException("부모 댓글이 존재하지 않습니다."));
         comment.setChildren(null);
         PostDocument postDocument = postContentESRespository.findById(postId).get();
-<<<<<<< HEAD
-        postDocument.setCommentCount(postDocument.getCommentCount() - 1);
-=======
         postDocument.setCommentSize(postDocument.getCommentSize() - 1);
->>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         postContentESRespository.save(postDocument);
         commentRepository.deleteById(commentId);
         return ResponseEntity.ok("ok");
@@ -225,5 +217,4 @@ public class CommentService {
         return commentRepository.findAll();
     }
 }
-
 
