@@ -2,19 +2,37 @@ package com.example.just.Service;
 
 
 import com.example.just.Dao.HashTag;
+<<<<<<< HEAD
+=======
+import com.example.just.Dao.HashTagMap;
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 
 
 import com.example.just.Dao.QBlame;
+<<<<<<< HEAD
 import com.example.just.Dao.QPost;
+=======
+import com.example.just.Dao.QHashTag;
+import com.example.just.Dao.QHashTagMap;
+import com.example.just.Dao.QPost;
+import com.example.just.Document.HashTagDocument;
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 import com.example.just.Document.PostDocument;
 import com.example.just.Dto.GptRequestDto;
 import com.example.just.Dto.PostPostDto;
 import com.example.just.Dto.PutPostDto;
 import com.example.just.Repository.BlameRepository;
+<<<<<<< HEAD
 import com.example.just.Response.ResponseGetMemberPostDto;
 import com.example.just.Response.ResponseGetPostDto;
+=======
+
+import com.example.just.Repository.HashTagESRepository;
+import com.example.just.Repository.HashTagMapRepository;
+import com.example.just.Response.ResponseGetMemberPostDto;
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 import com.example.just.Response.ResponsePutPostDto;
 import com.example.just.Mapper.PostMapper;
 import com.example.just.Repository.HashTagRepository;
@@ -25,14 +43,37 @@ import com.example.just.Repository.PostRepository;
 import com.example.just.jwt.JwtProvider;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+<<<<<<< HEAD
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+=======
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.util.*;
 import java.util.stream.Collectors;
+<<<<<<< HEAD
+=======
+import org.springframework.web.client.RestTemplate;
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 
 
 @Service
@@ -46,6 +87,12 @@ public class PostService {
     private MemberRepository memberRepository;
     @Autowired
     private HashTagRepository hashTagRepository;
+<<<<<<< HEAD
+=======
+
+    @Autowired
+    private HashTagESRepository hashTagESRepository;
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
     @Autowired
     private BlameRepository blameRepository;
     @Autowired
@@ -57,7 +104,13 @@ public class PostService {
     private GptService gptService;
 
     @Autowired
+<<<<<<< HEAD
     PostContentESRespository postContentESRespository;
+=======
+    private PostContentESRespository postContentESRespository;
+    @Autowired
+    private HashTagMapRepository hashTagMapRepository;
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 
     public PostService(EntityManager em, JPAQueryFactory query) {
         this.em = em;
@@ -85,7 +138,11 @@ public class PostService {
     public PostPostDto write(Long member_id, PostPostDto postDto) {    //글 작성
         Member member = checkMember(member_id);
         Post post = new Post();
+<<<<<<< HEAD
 
+=======
+        //해시태그가 NULL일 경우 Gpt로 해시태그 생성
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         if (postDto.getHash_tag() == null) {
             String prompt = "";
             for (int i = 0; i < postDto.getPost_content().size(); i++) {
@@ -95,12 +152,28 @@ public class PostService {
             List<String> tag = gptService.getTag(gptRequestDto);
             postDto.setHash_tag(tag);
         }
+<<<<<<< HEAD
         post.writePost(postDto, member);
         Post p = postRepository.save(post);
+=======
+        List<String> content = new ArrayList<>();
+        for (int i = 0; i < postDto.getPost_content().size(); i++) {
+            content.add(getConvertString(postDto.getPost_content().get(i)));
+        }
+        postDto.setPost_content(content);
+        post.writePost(postDto, member);
+        Post p = postRepository.save(post);
+
+        List<String> hashTags = postDto.getHash_tag();
+        saveHashTag(hashTags, p);
+
+        PostDocument postDocument = new PostDocument(p);
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         postContentESRespository.save(new PostDocument(p));
         return postDto;
     }
 
+<<<<<<< HEAD
     //글 삭제
     public void deletePost(Long post_id) throws NotFoundException {
         Post post = checkPost(post_id);
@@ -109,6 +182,38 @@ public class PostService {
             throw new NotFoundException();
         } else {
             postContentESRespository.deleteById(post_id);
+=======
+    private void saveHashTag(List<String> hashTags, Post p) {
+        for (int i = 0; i < hashTags.size(); i++) {
+            HashTag hashTag = hashTagRepository.findByName(hashTags.get(i));
+            HashTagMap hashTagMap = new HashTagMap();
+            if (hashTag == null) {
+                HashTag newHashTag = new HashTag(hashTags.get(i));
+                newHashTag.setTagCount(1L);
+                newHashTag = hashTagRepository.save(newHashTag);
+                hashTagESRepository.save(new HashTagDocument(newHashTag));
+                hashTagMap = new HashTagMap(newHashTag, p); //객체 그래프 설정
+            } else {
+                hashTag.setTagCount(hashTag.getTagCount() + 1);
+                hashTagRepository.save(hashTag);
+                hashTagESRepository.save(new HashTagDocument(hashTag));
+                hashTagMap = new HashTagMap(hashTag, p); //객체 그래프 설정
+            }
+            hashTagMapRepository.save(hashTagMap);
+        }
+    }
+
+
+    //글 삭제
+    public void deletePost(Long post_id) throws NotFoundException {
+        Post post = checkPost(post_id);
+        if (post == null) {
+            throw new NotFoundException();
+        } else {
+            // Elasticsearch에서 해당 포스트의 내용 삭제
+            postContentESRespository.deleteById(post_id);
+            deleteHashTag(post);
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
             postRepository.deleteById(post_id);
         }
     }
@@ -118,6 +223,7 @@ public class PostService {
         Long post_id = postDto.getPost_id();
         Member member = checkMember(member_id);
         Post checkPost = checkPost(post_id);
+<<<<<<< HEAD
 
         List<HashTag> hashTags = hashTagRepository.findByPost(checkPost);
         for (int i = 0; i < hashTags.size(); i++) {
@@ -130,6 +236,47 @@ public class PostService {
         return responsePutPostDto;
     }
 
+=======
+        List<HashTagMap> hashTagMaps = checkPost.getHashTagMaps();
+
+        deleteHashTag(checkPost);
+
+        List<String> content = new ArrayList<>();
+        for (int i = 0; i < postDto.getPost_content().size(); i++) {
+            content.add(getConvertString(postDto.getPost_content().get(i)));
+        }
+        postDto.setPost_content(content);
+
+        checkPost.changePost(postDto, member, checkPost);
+
+        Post p = postRepository.save(checkPost);
+        saveHashTag(postDto.getHash_tage(), p);
+
+        postContentESRespository.save(new PostDocument(checkPost));
+
+        ResponsePutPostDto responsePutPostDto = new ResponsePutPostDto(p);
+        return responsePutPostDto;
+    }
+
+    private void deleteHashTag(Post post) {
+        List<HashTagMap> hashTagMaps = post.getHashTagMaps();
+        for (int i = 0; i < hashTagMaps.size(); i++) {
+            hashTagRepository.findById(hashTagMaps.get(i).getHashTag().getId())
+                    .ifPresent(
+                            hashTag -> {
+                                if (hashTag.getTagCount() != 1) {
+                                    hashTag.setTagCount(hashTag.getTagCount() - 1);
+                                    hashTagESRepository.save(new HashTagDocument(hashTag));
+                                    hashTagRepository.save(hashTag);
+                                } else {
+                                    hashTagESRepository.deleteById(hashTag.getId());
+                                    hashTagRepository.deleteById(hashTag.getId());
+                                }
+                            });
+        }
+    }
+
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
     public List<Post> getAllPostList() {
         return postRepository.findAll();
     }
@@ -177,7 +324,13 @@ public class PostService {
     private List<ResponseGetMemberPostDto> createResponseGetMemberPostDto(List<Post> results, Long member_id) {
         List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
         for (int i = 0; i < results.size(); i++) {
+<<<<<<< HEAD
             ResponseGetMemberPostDto responseGetMemberPostDto = new ResponseGetMemberPostDto(results, member_id, i);
+=======
+            List<HashTagMap> hashTagMaps = results.get(i).getHashTagMaps();
+            ResponseGetMemberPostDto responseGetMemberPostDto = new ResponseGetMemberPostDto(results, member_id, i,
+                    hashTagMaps);
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
             getPostDtos.add(responseGetMemberPostDto);
         }
         return getPostDtos;
@@ -206,6 +359,7 @@ public class PostService {
         PostDocument postDocument = postContentESRespository.findById(post_id).get();
         if (post.getLikedMembers().contains(member)) {
             post.removeLike(member);
+<<<<<<< HEAD
             postDocument.setPostLike(postDocument.getPostLike() - 1);
             responsePost = new ResponsePost(post_id, "좋아요 취소");
         } else {
@@ -214,14 +368,28 @@ public class PostService {
             responsePost = new ResponsePost(post_id, "좋아요 완료");
         }
 
+=======
+            postDocument.setPostLikeSize(postDocument.getPostLikeSize() - 1);
+            responsePost = new ResponsePost(post_id, "좋아요 취소");
+        } else {
+            post.addLike(member);
+            postDocument.setPostLikeSize(postDocument.getPostLikeSize() + 1);
+            responsePost = new ResponsePost(post_id, "좋아요 완료");
+        }
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         postContentESRespository.save(postDocument);
         Post savePost = postRepository.save(post);
 
         return ResponseEntity.ok(responsePost);
     }
 
+<<<<<<< HEAD
 
     public ResponseGetPost searchByCursorMember(String cursor, Long limit, Long member_id) throws NotFoundException {
+=======
+    public ResponseGetPost searchByCursorMember(String cursor, Long limit, Long member_id, String like)
+            throws NotFoundException, IOException {
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         QPost post = QPost.post;
         QBlame blame = QBlame.blame;
         Set<Long> viewedPostIds = new HashSet<>();
@@ -245,16 +413,63 @@ public class PostService {
                 .from(blame)
                 .where(blame.blameMemberId.eq(realMember.getId()))
                 .fetch();
+<<<<<<< HEAD
 
         System.out.println(blames);
         System.out.println(targetMembers);
+=======
+        HttpClient httpClient = HttpClients.createDefault();
+        List<String> likePostHashTagName = new ArrayList<>();
+        System.out.println(like);
+        // 이전에 본 글들의 ID를 가져옵니다.
+        // Base64로 디코딩
+        byte[] decodedBytes = Base64.getDecoder().decode(like);
+
+// UTF-8으로 디코딩된 문자열
+        like = new String(decodedBytes, StandardCharsets.UTF_8);
+        System.out.println(like);
+        if (like != null) {
+            String[] likePostArray = like.split(", ");
+            for (String likePost : likePostArray) {
+                likePostHashTagName.add((likePost.trim()));
+            }
+        }
+        Random random = new Random();
+        int arrayLength = likePostHashTagName.size();
+        int randomIndex = random.nextInt(arrayLength);
+        String randonHashTagName = likePostHashTagName.get(randomIndex);
+        // 요청을 보낼 URL 설정
+        HttpGet request = new HttpGet("http://34.22.67.43:8081/api/similar_words/" + randonHashTagName);
+
+        // 요청 실행 및 응답 수신
+        HttpResponse response = httpClient.execute(request);
+
+        // 응답 코드 확인
+        int statusCode = response.getStatusLine().getStatusCode();
+        System.out.println("Response Code: " + statusCode);
+
+        // 응답 데이터 읽기
+        String responseBody = EntityUtils.toString(response.getEntity());
+        System.out.println("Response: " + responseBody);//Response: [[3], [1], [1], [1]]
+        // 여기서 Python Server의 추천 시스템으로 Post_id들을 가져온다.
+        List<Long> postIds = new ArrayList<>();
+        for (int i = 2; i < responseBody.length(); i += 5) {
+            postIds.add(Long.parseLong(responseBody.substring(i, i + 1)));
+        }
+        System.out.println(postIds);
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
         // 중복된 글을 제외하고 랜덤으로 limit+1개의 글을 가져옵니다.
         List<Post> results = query.select(post)
                 .from(post)
                 .where(post.post_id.notIn(viewedPostIds),
                         post.post_create_time.isNotNull(),
                         post.post_id.notIn(blames),
+<<<<<<< HEAD
                         post.member.id.notIn(targetMembers))
+=======
+                        post.member.id.notIn(targetMembers),
+                        post.post_id.in(postIds))
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
                 .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
                 .limit(limit)
                 .fetch();
@@ -293,4 +508,86 @@ public class PostService {
         List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(results, member_id);
         return getPostDtos;
     }
+<<<<<<< HEAD
+=======
+
+    public String getConvertString(String str) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        String requestBody = "{\"question\":\"" + str + "\",\"deny_list\":[\"string\"]}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+                "http://203.241.228.51:8000/anonymize/",
+                HttpMethod.POST,
+                request,
+                String.class);
+
+        String responseBody = responseEntity.getBody();
+        String convertStr = parsingJson(responseBody);
+        return convertStr;
+    }
+
+    public String parsingJson(String json) {
+        String response;
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject elem = (JSONObject) parser.parse(json);
+            response = elem.get("convertedQuestion").toString();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+        return response;
+    }
+
+    public String getLikeHashTag(Long member_id) {
+
+        QHashTagMap hashTagMap = QHashTagMap.hashTagMap;
+        QHashTag hashTag = QHashTag.hashTag;
+        Member member = checkMember(member_id);
+        //회웡니 쓴글 다 가져오기
+        List<Post> posts = member.getPosts();
+
+        //회원이 좋아요 한글의 해시태그 ID 가져오기
+        List<Long> hashTagMapsOfLike = query.select(hashTagMap.id)
+                .from(hashTagMap)
+                .where(hashTagMap.post.in(member.getLikedPosts()))
+                .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
+                .limit(5)
+                .fetch();
+
+        //회원이 쓴글의 해시태그 ID 가져오기
+        List<Long> hashTagMaps = query.select(hashTagMap.id)
+                .from(hashTagMap)
+                .where(hashTagMap.post.in(posts))
+                .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
+                .limit(5)
+                .fetch();
+
+        for (int i = 0; i < hashTagMapsOfLike.size(); i++) {
+            hashTagMaps.add(hashTagMapsOfLike.get(i));
+        }
+
+        //해시태그맵의 ID랑 겹치는거 뽑아오기
+        List<String> hashTags = query.select(hashTag.name)
+                .from(hashTag)
+                .where(hashTag.id.in(hashTagMaps))
+                .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
+                .limit(5)
+                .fetch();
+        String hashTagsString = hashTags.toString();
+        // hashTags.toString()으로부터 UTF-8로 인코딩된 바이트 배열 생성
+        byte[] utf8Bytes = hashTagsString.getBytes(StandardCharsets.UTF_8);
+
+// UTF-8로 인코딩된 바이트 배열을 Base64로 인코딩하여 문자열로 변환
+        String encodeHashTag = Base64.getEncoder().encodeToString(utf8Bytes);
+        System.out.println(hashTags);
+
+        return encodeHashTag;
+    }
+>>>>>>> aea347125278b8318ff91f76045a9a2d7fb0c828
 }
