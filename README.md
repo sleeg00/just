@@ -43,7 +43,7 @@ Just는 당신의 감정과 이야기를 자유롭게 공유할 수 있는 공�
 
 
 ## 📦 ERD
-<img width="570" alt="image" src="https://github.com/inje-megabrain/JUST-be/assets/96710732/2119a083-15b0-4fc2-a269-18721b2c6059">
+![Copy of Just](https://github.com/inje-megabrain/JUST-be/assets/96710732/653e7f58-802c-465c-af1d-25ffb38f93e4)
 
 ## 🖥️ 화면 구성
 <img width="190" alt="image" src="https://github.com/inje-megabrain/JUST-be/assets/96710732/847ce9a8-c58c-4413-940a-c53badedf7db">
