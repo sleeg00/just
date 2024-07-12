@@ -52,11 +52,11 @@ jobs:
                - name: Make directory for deliver
                run: mkdir deploy
 
-               - name: Build with Gradle
-                 run: ./gradlew clean build -x test
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
 
-               - name: Copy jar
-                 run: cp ./build/libs/*.jar ./deploy/
+      - name: Copy jar
+        run: cp ./build/libs/*.jar ./deploy/
 
       # 도커 컴포즈 설정 파일 서버로 전달하기(복사 후 붙여넣기)
       # AWS_DEV_HOSTNAME : EC2 인스턴스 퍼블릭 DNS (탄력적 ip)
