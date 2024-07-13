@@ -68,10 +68,9 @@ jobs:
       ## springboot 도커 이미지 빌드 후 도커허브에 push하기
       - name: web springboot docker build and push
         run: |
-  
           docker login -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
-          docker build -t "${{  env.DOCKER_USERNAME }}"/"${{ secrets.DOCKER_REPOSITORY }}":backend .
-          docker push ${{  env.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:backend
+          docker build -t ${{ secrets.DOCKER_REPOSITORY }}:backend .
+          docker push ${{ secrets.DOCKER_REPOSITORY }}:backend
       # nginx.conf 경로 변경 후 도커 컴포즈 실행하기
       # 도커 허브에서 jar파일 및 pull후에 컴포즈 up
       - name: Deploy to Dev
