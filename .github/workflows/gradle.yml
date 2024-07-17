@@ -84,7 +84,8 @@ jobs:
             sudo docker pull "${{ secrets.DOCKER_USERNAME }}"/${{ secrets.DOCKER_REPOSITORY }}
             cd src/main/resources/backend-config
             docker-compose down
-            docker rmi $(docker images -q)
+            docker rm $(docker ps -a -q)  
+            docker rmi -f $(docker images -q)
             docker-compose up -d
          # (4) AWS 인증 (IAM 사용자 Access Key, Secret Key 활용)
           #- name: Configure AWS credentials
