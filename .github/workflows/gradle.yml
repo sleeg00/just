@@ -80,7 +80,7 @@ jobs:
           host: ${{ secrets.AWS_DEV_HOSTNAME }}
           key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
           script: |
-            docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+            docker login -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
             sudo docker pull "${{ secrets.DOCKER_USERNAME }}"/${{ secrets.DOCKER_REPOSITORY }}
             cd src/main/resources/backend-config
             docker-compose down
