@@ -86,6 +86,7 @@ jobs:
             docker-compose down
             docker rm $(docker ps -a -q)  
             docker rmi -f $(docker images -q)
+            cd src/main/resources
             docker-compose up -d
          # (4) AWS 인증 (IAM 사용자 Access Key, Secret Key 활용)
           #- name: Configure AWS credentials
