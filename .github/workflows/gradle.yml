@@ -63,7 +63,7 @@ jobs:
           username: ubuntu
           host: ${{ secrets.AWS_DEV_HOSTNAME }}
           key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
-          source: "./src/main/resources/docker-compose.yml"
+          source: "./src/main/resources/back"
           target: "/home/ubuntu/"
       ## springboot 도커 이미지 빌드 후 도커허브에 push하기
       - name: web springboot docker build and push
@@ -82,7 +82,7 @@ jobs:
           script: |
             docker login -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
             sudo docker pull "${{ secrets.DOCKER_USERNAME }}"/${{ secrets.DOCKER_REPOSITORY }}
-            cd src/main/resources
+            cd src/main/resources/back
             docker-compose down
             docker rm $(docker ps -a -q)  
             docker rmi -f $(docker images -q)

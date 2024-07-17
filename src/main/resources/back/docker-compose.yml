@@ -2,7 +2,7 @@ version: '3'
 services:
   myapp:
     build:
-      context: .
+      context: ../../generated
       dockerfile: Dockerfile
     ports:
       - "9000:9000"
