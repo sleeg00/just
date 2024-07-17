@@ -81,7 +81,7 @@ jobs:
           key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
           script: |
             docker login -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
-            sudo docker pull "${{ secrets.DOCKER_USERNAME }}"/${{ secrets.DOCKER_REPOSITORY }}
+            sudo docker pull sleeg00/just:backend
             cd src/main/resources/back
             docker-compose down
             docker rm $(docker ps -a -q)  
