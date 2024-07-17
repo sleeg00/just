@@ -73,15 +73,15 @@ jobs:
           docker push sleeg00/just:backend
       # nginx.conf 경로 변경 후 도커 컴포즈 실행하기
       # 도커 허브에서 jar파일 및 pull후에 컴포즈 up
-      - name: Deploy to Dev
+      - name: Deploy to Devd
         uses: appleboy/ssh-action@master
         with:
           username: ubuntu
           host: ${{ secrets.AWS_DEV_HOSTNAME }}
           key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
           script: |
-            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}
+            docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+            sudo docker pull "${{ secrets.DOCKER_USERNAME }}"/${{ secrets.DOCKER_REPOSITORY }}
             cd src/main/resources/backend-config
             docker-compose down
             docker rmi $(docker images -q)
