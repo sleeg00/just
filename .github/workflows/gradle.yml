@@ -81,12 +81,11 @@ jobs:
           key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
           script: |
             docker login -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
-            sudo docker pull sleeg00/just:backend
-            cd src/main/resources/back
-            docker-compose down
-            docker rm $(docker ps -a -q)  
-            docker rmi -f $(docker images -q)
-            docker-compose up -d
+            docker pull sleeg00/just:backend
+            docker stop $(docker ps -a -q)
+            docker run -d --log-driver=syslog -p 9000:9000 sleeg00/just:backend
+            docker rm $(docker ps --filter 'status=exited' -a -q)
+            docker image prune -a -f
          # (4) AWS 인증 (IAM 사용자 Access Key, Secret Key 활용)
           #- name: Configure AWS credentials
           # uses: aws-actions/configure-aws-credentials@v1
