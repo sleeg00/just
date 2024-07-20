@@ -47,41 +47,71 @@ jobs:
           OCCUPY_SECRET_DIR_FILE_NAME: application.yml
         run: echo $OCCUPY_SECRET | base64 --decode > $OCCUPY_SECRET_DIR/$OCCUPY_SECRET_DIR_FILE_NAME
 
-      # (3) Gradle build (Test 제외)
-      - name: Build with Gradle
-        uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+            - name: Make directory for deliver
+              run: mkdir deploy
+
+            - name: Build with Gradle
+              run: ./gradlew clean build -x test
+
+            - name: Copy jar
+              run: cp ./build/libs/*.jar ./deploy/
+                
+      # 도커 컴포즈 설정 파일 서버로 전달하기(복사 후 붙여넣기)
+      # AWS_DEV_HOSTNAME : EC2 인스턴스 퍼블릭 DNS (탄력적 ip)
+      # AWS_DEV_PRIVATE_KEY : .pem 키 내용 (vi, cat으로 확인 가능)
+      - name: Send docker-compose.yml
+        uses: appleboy/scp-action@master
         with:
-          arguments: clean build -x test
-
-     # - name: Docker build
-      #    run: |
-       #     docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        #    docker build -t app .
-         #   docker tag app ${{ secrets.DOCKER_USERNAME }}/sejongmate:latest
-          #  docker push ${{ secrets.DOCKER_USERNAME }}/sejongmate:latest
-
+          username: ec2-user
+          host: ${{ secrets.AWS_DEV_HOSTNAME }}
+          key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
+          source: "./src/main/resources/docker-compose.yml"
+          target: "/home/ec2-user/"
+      ## springboot 도커 이미지 빌드 후 도커허브에 push하기
+      - name: web springboot docker build and push
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:backend .
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:backend
+      # nginx.conf 경로 변경 후 도커 컴포즈 실행하기
+      # 도커 허브에서 jar파일 및 pull후에 컴포즈 up
+      - name: Deploy to Dev
+        uses: appleboy/ssh-action@master
+        with:
+          username: ec2-user
+          host: ${{ secrets.AWS_DEV_HOSTNAME }}
+          key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
+          script: |
+            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}
+            cd src/main/resources/backend-config
+            docker-compose down
+            docker rmi $(docker images -q)
+            docker-compose up -d
       # (4) AWS 인증 (IAM 사용자 Access Key, Secret Key 활용)
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+      #- name: Configure AWS credentials
+       # uses: aws-actions/configure-aws-credentials@v1
+        #with:
+         # aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          #aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          #aws-region: ${{ env.AWS_REGION }}
 
       # (5) 빌드 결과물을 S3 버킷에 업로드
-      - name: Upload to AWS S3
-        run: |
-          aws deploy push \
-            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
-            --ignore-hidden-files \
-            --s3-location s3://$S3_BUCKET_NAME/$GITHUB_SHA.zip \
-            --source .
+      #- name: Upload to AWS S3
+       # run: |
+         # aws deploy push \
+        #    --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+          #  --ignore-hidden-files \
+           # --s3-location s3://$S3_BUCKET_NAME/$GITHUB_SHA.zip \
+            #--source .
 
       # (6) S3 버킷에 있는 파일을 대상으로 CodeDeploy 실행
-      - name: Deploy to AWS EC2 from S3
-        run: |
-          aws deploy create-deployment \
-            --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
-            --deployment-config-name CodeDeployDefault.AllAtOnce \
-            --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
-            --s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
+     # - name: Deploy to AWS EC2 from S3
+      #  run: |
+       #   aws deploy create-deployment \
+        #    --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+         #   --deployment-config-name CodeDeployDefault.AllAtOnce \
+          #  --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+           # --s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
