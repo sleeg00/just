@@ -1,35 +1,41 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
-#
-name: Java CI with Gradle
-####
-on: # 이벤트 트리거
-  push: #push 이벤트 발생시
-    branches: #어떤 브랜치에서
-      - develop
-  pull_request: #pull_request 발생시
-    branches: #어떤 브랜치에서
-      - develop
+name: Deploy to Amazon EC2
 
-permissions: #작업에 필요한 권환₩#
+on:
+  pull_request:
+    branches:
+      - develop
+      - 'feat/**' # feat으로 시작하는 브랜치에 대해서도 동작
+  push:
+    branches:
+      - develop
+      - 'feat/**' # feat으로 시작하는 브랜치에 대해서도 동작
+##
+env:
+  DOCKER_PASSWORD : ${{ secrets.DOCKER_PASSWORD }}
+  DOCKER_USERNAME : ${{ secrets.DOCKER_USERNAME }}
+
+
+permissions:
   contents: read
 
-jobs: #작업을 정의
-  build:
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
 
-    runs-on: ubuntu-latest # Ubunt 환경에서 작업을 실행
+    steps:
+      # (1) 기본 체크아웃
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    steps: #작업 단계 정의
-      - uses: actions/checkout@v3 #현재 레퍼지토리를 체크아웃
-      - name: Set up JDK 11 #JDK 11 설치
-        uses: actions/setup-java@v3 #JDK 11을 설치하는 액션을 사용
+      # (2) JDK 11 세팅
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
         with:
-          java-version: '11'
           distribution: 'temurin'
+          java-version: '11'
+
       - name: Copy Secret
         env:
           OCCUPY_SECRET: ${{ secrets.OCCUPY_SECRET }}
@@ -37,8 +43,69 @@ jobs: #작업을 정의
           OCCUPY_SECRET_DIR_FILE_NAME: application.yml
         run: echo $OCCUPY_SECRET | base64 --decode > $OCCUPY_SECRET_DIR/$OCCUPY_SECRET_DIR_FILE_NAME
 
-      - name: Build with Gradle #Gradle이용하여 빌드
-        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Make directory for deliver
+        run: mkdir deploy
+
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
+
+      - name: Copy jar
+        run: cp ./build/libs/*.jar ./back
+
+      # 도커 컴포즈 설정 파일 서버로 전달하기(복사 후 붙여넣기)
+      # AWS_DEV_HOSTNAME : EC2 인스턴스 퍼블릭 DNS (탄력적 ip)
+      # AWS_DEV_PRIVATE_KEY : .pem 키 내용 (vi, cat으로 확인 가능)
+      - name: Send docker-compose.yml
+        uses: appleboy/scp-action@master
         with:
-          gradle-version: 7.2 #그래들 버전 7.2 사용
-          arguments: clean build -x test
+          username: ubuntu
+          host: ${{ secrets.AWS_DEV_HOSTNAME }}
+          key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
+          source: "./src/main/resources/back"
+          target: "/home/ubuntu/"
+      ## springboot 도커 이미지 빌드 후 도커허브에 push하기
+      - name: web springboot docker build and push
+        run: |
+          docker login -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
+          docker build -t sleeg00/just:backend .
+          docker push sleeg00/just:backend
+      # nginx.conf 경로 변경 후 도커 컴포즈 실행하기
+      # 도커 허브에서 jar파일 및 pull후에 컴포즈 up
+      - name: Deploy to Devd
+        uses: appleboy/ssh-action@master
+        with:
+          username: ubuntu
+          host: ${{ secrets.AWS_DEV_HOSTNAME }}
+          key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
+          script: |
+            docker login -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
+            sudo docker pull sleeg00/just:backend
+            cd src/main/resources/back
+            docker-compose down
+            docker rm $(docker ps -a -q)  
+            docker rmi -f $(docker images -q)
+            docker-compose up -d
+         # (4) AWS 인증 (IAM 사용자 Access Key, Secret Key 활용)
+          #- name: Configure AWS credentials
+          # uses: aws-actions/configure-aws-credentials@v1
+          #with:
+          # aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          #aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}            #aws-region: ${{ env.AWS_REGION }}
+
+          # (5) 빌드 결과물을 S3 버킷에 업로드            #- name: Upload to AWS S3
+          # run: |
+          # aws deploy push \
+          #    --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+          #  --ignore-hidden-files \
+          # --s3-location s3://$S3_BUCKET_NAME/$GITHUB_SHA.zip \
+          #--source .
+                        # (6) S3 버킷에 있는 파일을 대상으로 CodeDeploy 실행
+          # - name: Deploy to AWS EC2 from S3
+          #  run: |
+          #   aws deploy create-deployment \
+          #    --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+         #   --deployment-config-name CodeDeployDefault.AllAtOnce \
+          #  --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+          # --s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
