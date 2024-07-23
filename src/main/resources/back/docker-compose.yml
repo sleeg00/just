@@ -1,7 +1,8 @@
 services:
-  myapp:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  spring_boot:
+    container_name : spring_boot
+    image: sleeg00/just:backend
+    expose:
+      - 9000
     ports:
-      - "9000:9000"
+      - 9000:9000
