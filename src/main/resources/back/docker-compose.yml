@@ -3,13 +3,6 @@ networks:
     driver: bridge
 
 services:
-  spring_boot:
-    container_name : spring_boot
-    image: sleeg00/just:backend
-    expose:
-      - 9000
-    ports:
-      - 9000:9000
   # Elastic search 설정
   elasticsearch:
     container_name: elasticsearch
@@ -55,3 +48,10 @@ services:
       - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
     networks:
       - elk
+  spring_boot:
+    container_name: spring_boot
+    image: sleeg00/just:backend
+    expose:
+      - 9000
+    ports:
+      - 9000:9000
