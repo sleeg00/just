@@ -51,9 +51,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
-      - name: Copy jar
-        run: cp ./build/libs/*.jar ./back
-
       # 도커 컴포즈 설정 파일 서버로 전달하기(복사 후 붙여넣기)
       # AWS_DEV_HOSTNAME : EC2 인스턴스 퍼블릭 DNS (탄력적 ip)
       # AWS_DEV_PRIVATE_KEY : .pem 키 내용 (vi, cat으로 확인 가능)
@@ -82,10 +79,8 @@ jobs:
           script: |
             docker login -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
             docker pull sleeg00/just:backend
-            docker stop $(docker ps -a -q)
-            docker run -d --log-driver=syslog -p 9000:9000 sleeg00/just:backend
-            docker rm $(docker ps --filter 'status=exited' -a -q)
-            docker image prune -a -f
+            docker-compose up -d
+            docker image prune -f
          # (4) AWS 인증 (IAM 사용자 Access Key, Secret Key 활용)
           #- name: Configure AWS credentials
           # uses: aws-actions/configure-aws-credentials@v1
