@@ -1,3 +1,7 @@
+networks:
+  elk:
+    driver: bridge
+
 services:
   spring_boot:
     container_name : spring_boot
