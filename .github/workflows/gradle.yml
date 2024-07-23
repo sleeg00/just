@@ -81,6 +81,8 @@ jobs:
             docker pull sleeg00/just:backend
             cd /home/ubuntu/src/main/resources/back
             docker-compose up -d
+            docker image prune -f
+          # docker image 사용하지 않는 것 삭제 (ex) -> 태그 없는 것 삭제
          # (4) AWS 인증 (IAM 사용자 Access Key, Secret Key 활용)
           #- name: Configure AWS credentials
           # uses: aws-actions/configure-aws-credentials@v1
