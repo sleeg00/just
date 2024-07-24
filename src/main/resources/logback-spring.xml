@@ -8,7 +8,7 @@
         </encoder>
     </appender>
 
-    <logger name="INFO_LOG" level="DEBUG">
+    <root level="debug">
         <appender-ref ref="LOGSTASH"/>
-    </logger>
+    </root>
 </configuration>
