@@ -11,7 +11,7 @@
       },
       "nori_mixed": {
         "type": "nori_tokenizer",
-        "decompound_mo  de": "mixed"
+        "decompound_mode": "mixed"
       }
     },
     "analyzer": {
