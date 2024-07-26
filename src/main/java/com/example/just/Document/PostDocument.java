@@ -29,8 +29,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Mapping(mappingPath = "elastic/post-mapping.json")
-@Setting(settingPath = "elastic/post-setting.json")
+//@Mapping(mappingPath = "elastic/post-mapping.json")
+//@Setting(settingPath = "elastic/post-setting.json")
 public class PostDocument {
     @Id
     private Long id;
