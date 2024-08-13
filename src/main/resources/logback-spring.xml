@@ -4,7 +4,7 @@
 
     <!-- Logstash로 로그를 전송하는 Appender -->
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>43.203.44.199:5000</destination>
+        <destination>13.209.204.40:5000</destination>
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
                 <mdc />
