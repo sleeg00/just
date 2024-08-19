@@ -53,8 +53,10 @@ public class SearchService {
         if(token == null){
             return new ResponseEntity(new ResponseMessage("로그인 후 검색가능합니다."),null, HttpStatus.BAD_REQUEST);
         }
+
         Long id = Long.valueOf(jwtProvider.getIdFromToken(token)); //토큰
         List<Blame> blames = blameRepository.findByBlameMemberId(id);
+
         //유저가 신고한 게시글 id들
         List<Long> postIds = blames.stream()
                 .map(Blame::getTargetPostId)
