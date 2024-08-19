@@ -116,10 +116,9 @@ public class PostService {
             List<String> tag = gptService.getTag(gptRequestDto);
             postDto.setHash_tag(tag);
         }
-        List<String> content = new ArrayList<>();
-        for(int i = 0; i<postDto.getPost_content().size();i++){
-            content.add(getConvertString(postDto.getPost_content().get(i)));
-        }
+        List<String> content = new ArrayList<>(postDto.getPost_content()); // 코드 최적화
+
+
         postDto.setPost_content(content);
         post.writePost(postDto, member);
         Post p = postRepository.save(post);
@@ -179,7 +178,7 @@ public class PostService {
 
         List<String> content = new ArrayList<>();
         for(int i = 0; i<postDto.getPost_content().size();i++){
-            content.add(getConvertString(postDto.getPost_content().get(i)));
+            content.add(postDto.getPost_content().get(i));
         }
         postDto.setPost_content(content);
 
@@ -317,8 +316,8 @@ public class PostService {
             }
         }
 
-        Optional<Member> member = memberRepository.findById(member_id);
-        Member realMember = member.get();
+        Member realMember = checkMember(member_id);
+        System.out.println("member LOG");
 
         List<Long> blames = query.select(blame.targetPostId)
                 .from(blame)
@@ -328,6 +327,7 @@ public class PostService {
                 .from(blame)
                 .where(blame.blameMemberId.eq(realMember.getId()))
                 .fetch();
+        System.out.println("blames LOG");
         // 중복된 글을 제외하고 랜덤으로 limit+1개의 글을 가져옵니다.
         List<Post> results = query.select(post)
                 .from(post)
@@ -374,26 +374,7 @@ public class PostService {
         return getPostDtos;
     }
 
-    public String getConvertString(String str){
-        RestTemplate restTemplate = new RestTemplate();
 
-        String requestBody = "{\"question\":\"" + str + "\",\"deny_list\":[\"string\"]}";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-
-        HttpEntity<String> request = new HttpEntity<>(requestBody,headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(
-                "http://203.241.228.51:8000/anonymize/",
-                HttpMethod.POST,
-                request,
-                String.class);
-
-        String responseBody = responseEntity.getBody();
-        String convertStr =parsingJson(responseBody);
-        return convertStr;
-    }
 
     public String parsingJson(String json){
         String response;
