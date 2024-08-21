@@ -81,6 +81,5 @@ public class ResponseGetMemberPostDto {
                 this.mine = false;
             }
         }
-
     }
 }
