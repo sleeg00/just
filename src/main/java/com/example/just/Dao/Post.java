@@ -46,7 +46,7 @@ public class Post {
     private String emoticon;
 
 
-    @ManyToMany()
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "post_like",
             joinColumns = @JoinColumn(name = "post_id"),
@@ -56,15 +56,15 @@ public class Post {
     @Builder.Default
     private List<Member> likedMembers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<HashTagMap> hashTagMaps = new ArrayList<>();
 
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY) // 원하지 않는 데이터를 가져오지 않기 위해 LAZY로 설정
     @JoinColumn(name = "member_id") //글을쓴 Member_id
     @JsonIgnore
     private Member member;
 
-    @OneToMany(mappedBy = "post", orphanRemoval = true)
+    @OneToMany(mappedBy = "post", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
     @Column(name = "blamed_count")
     private Long blamedCount;

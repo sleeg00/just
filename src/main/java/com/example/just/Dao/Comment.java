@@ -34,28 +34,28 @@ public class Comment {
     @Column(name = "comment_dislike")
     private Long comment_dislike;   //비추천수
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id") //댓글을 쓴 Member_id
     @JsonIgnore
     private Member member;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false) //해당 댓글이 달린 게시물
     @JsonIgnore
     private Post post;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id") //해당 댓글의 부모 댓글
     private Comment parent;
 
-    @OneToMany(mappedBy = "parent", orphanRemoval = true)
+    @OneToMany(mappedBy = "parent", orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Comment> children = new ArrayList<>(); //해당 댓글의 자식 댓글들
 
     @Column(name = "blamed_count")
     private int blamedCount;
 
-    @ManyToMany()
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "comment_like",
             joinColumns = @JoinColumn(name = "comment_id"),
