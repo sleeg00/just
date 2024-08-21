@@ -118,7 +118,6 @@ public class PostService {
         }
         List<String> content = new ArrayList<>(postDto.getPost_content()); // 코드 최적화
 
-
         postDto.setPost_content(content);
         post.writePost(postDto, member);
         Post p = postRepository.save(post);
@@ -172,18 +171,15 @@ public class PostService {
         Post checkPost = checkPost(post_id);
         List<HashTagMap> hashTagMaps = checkPost.getHashTagMaps();
 
-
         deleteHashTag(checkPost);
 
-
         List<String> content = new ArrayList<>();
-        for(int i = 0; i<postDto.getPost_content().size();i++){
+        for (int i = 0; i < postDto.getPost_content().size(); i++) {
             content.add(postDto.getPost_content().get(i));
         }
         postDto.setPost_content(content);
 
         checkPost.changePost(postDto, member, checkPost);
-
 
         Post p = postRepository.save(checkPost);
         saveHashTag(postDto.getHash_tage(), p);
@@ -317,17 +313,18 @@ public class PostService {
         }
 
         Member realMember = checkMember(member_id);
-        System.out.println("member LOG");
+        //System.out.println("member LOG");
 
         List<Long> blames = query.select(blame.targetPostId)
                 .from(blame)
                 .where(blame.blameMemberId.eq(realMember.getId()))
                 .fetch();
+
         List<Long> targetMembers = query.select(blame.targetMemberId)
                 .from(blame)
                 .where(blame.blameMemberId.eq(realMember.getId()))
                 .fetch();
-        System.out.println("blames LOG");
+        //System.out.println("blames LOG");
         // 중복된 글을 제외하고 랜덤으로 limit+1개의 글을 가져옵니다.
         List<Post> results = query.select(post)
                 .from(post)
@@ -338,6 +335,7 @@ public class PostService {
                 .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
                 .limit(limit)
                 .fetch();
+        //System.out.println("Post LOG");
         List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
         if (results.size() == 0) {
             throw new NotFoundException();
@@ -375,8 +373,7 @@ public class PostService {
     }
 
 
-
-    public String parsingJson(String json){
+    public String parsingJson(String json) {
         String response;
         try {
             JSONParser parser = new JSONParser();
