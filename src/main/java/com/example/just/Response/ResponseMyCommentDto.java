@@ -20,7 +20,7 @@ public class ResponseMyCommentDto {
     public ResponseMyCommentDto(Comment comment, Long member_id, Member member, boolean isMine){
         comment_id = comment.getComment_id();
         comment_content = comment.getComment_content();
-        post = new ResponseGetMemberPostDto(comment.getPost(), member_id, member);
+        post = new ResponseGetMemberPostDto(comment.getPost(), member_id, null);
         time = comment.getComment_create_time();
         this.isMine = isMine;
     }
