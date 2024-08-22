@@ -56,11 +56,11 @@
       private List<Comment> comments = new ArrayList<>();
 
       @Builder.Default
-      @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE)
+      @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
       private List<Post> likedPosts = new ArrayList<>();
 
       @Builder.Default
-      @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE)
+      @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
       private List<Comment> likedComments = new ArrayList<>();
       public void addBlamed(){
           blamedCount++;

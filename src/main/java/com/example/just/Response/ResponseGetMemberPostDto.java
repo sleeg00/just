@@ -32,16 +32,15 @@ public class ResponseGetMemberPostDto {
     private boolean like;
     private boolean mine;
 
-    public ResponseGetMemberPostDto(Post post, Long member_id, Member member) {
+    public ResponseGetMemberPostDto(Post post,  Long member_id,  List<HashTagMap> hashTagMaps) {
         this.post_id = post.getPost_id();
         this.post_content = post.getPostContent();
         this.post_create_time = post.getPost_create_time();
         this.secret = post.getSecret();
         List<String> names = new ArrayList<>();
-        // List<HashTag> hashTags = post.getHash_tag();
-        // for (int j = 0; j < hashTags.size(); j++) {
-        //     names.add(hashTags.get(j).getName());
-        //  }
+        for (int j = 0; j < hashTagMaps.size(); j++) {
+            names.add(hashTagMaps.get(j).getHashTag().getName());
+        }
         this.hash_tag = names;
         this.comment_size = Long.valueOf(post.getComments().size());
         this.post_picture = post.getPost_picture();
@@ -81,5 +80,9 @@ public class ResponseGetMemberPostDto {
                 this.mine = false;
             }
         }
+    }
+
+    public ResponseGetMemberPostDto() {
+
     }
 }
