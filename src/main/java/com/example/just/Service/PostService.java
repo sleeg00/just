@@ -4,6 +4,7 @@ package com.example.just.Service;
 import static com.example.just.Dao.QComment.comment;
 import static com.example.just.Dao.QHashTagMap.hashTagMap;
 
+import com.example.just.Dao.Comment;
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Member;
@@ -37,6 +38,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.function.Function;
+import org.h2.result.MergedResult;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -214,6 +216,8 @@ public class PostService {
     public ResponseGetPost searchByCursor(String cursor, Long limit, Long member_id) throws NotFoundException { //글 조
         QPost post = QPost.post;
         QBlame blame = QBlame.blame;
+        QHashTagMap hashTagMaps = QHashTagMap.hashTagMap;
+        QHashTag hashTag = QHashTag.hashTag;
         Set<Long> viewedPostIds = new HashSet<>();
         // 이전에 본 글들의 ID를 가져옵니다.
         if (cursor != null) {
@@ -223,13 +227,42 @@ public class PostService {
                 viewedPostIds.add(Long.parseLong(viewedPostId.trim()));
             }
         }
-        // 중복된 글을 제외하고 랜덤으로 limit+1개의 글을 가져옵니다.
-        List<Post> results = query.selectFrom(post)
+        JPAQuery<Post> postHashTagsQuery = query.select(post)
+                .from(post)
+                .leftJoin(post.hashTagMaps, hashTagMap).fetchJoin()
+                .leftJoin(hashTagMaps.hashTag, hashTag).fetchJoin()
                 .where(post.post_id.notIn(viewedPostIds),
-                        post.post_create_time.isNotNull())
+                        post.post_create_time.isNotNull(),
+                        hashTagMap.post.post_id.eq(post.post_id),
+                        hashTagMap.hashTag.id.eq(hashTag.id))
                 .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
-                .limit(limit)
-                .fetch();
+                .limit(limit);
+
+        List<Post> postsWithHashTags = postHashTagsQuery.fetch();
+        List<Long> postIds = postsWithHashTags.stream()
+                .map(Post::getPost_id)
+                .collect(Collectors.toList());
+
+        JPAQuery<Post> postCommentsQuery = query.select(post)
+                .from(post)
+                .leftJoin(post.comments, comment).fetchJoin()
+                .where(post.post_id.in(postIds),
+                        comment.post.post_id.in(postIds));
+
+        List<Post> postsWithComments = postCommentsQuery.fetch();
+        Map<Long, Post> postMap = postsWithHashTags.stream()
+                .collect(Collectors.toMap(Post::getPost_id, Function.identity()));
+        int i = 0;
+        for (Post postMapValue : postMap.values()) {
+            if (postsWithComments.size() == 0) {
+                postMapValue.setComments(Collections.emptyList());
+            } else {
+                postMapValue.setComments(postsWithComments.get(i++).getComments());
+            }
+        }
+
+        List<Post> results = new ArrayList<>(postMap.values());
+
         if (results.size() == 0) {
             throw new NotFoundException();
         } else {
@@ -261,7 +294,6 @@ public class PostService {
             List<String> hashTagNames = hashTagMaps.stream()
                     .map(hashTagMap -> hashTagMap.getHashTag().getName())
                     .collect(Collectors.toList());
-
             // ResponseGetMemberPostDto 생성 및 필드 세팅
             ResponseGetMemberPostDto responseGetMemberPostDto = new ResponseGetMemberPostDto();
             responseGetMemberPostDto.setPost_id(post.getPost_id());
@@ -343,26 +375,23 @@ public class PostService {
         }
 
         Member realMember = checkMember(member_id);
-        //System.out.println("member LOG");
 
         List<Tuple> blames = query.select(blame.targetPostId, blame.targetMemberId)
                 .from(blame)
                 .where(blame.blameMemberId.eq(realMember.getId()))
                 .fetch();
         // 결과를 가져와서 리스트로 변환
-        List<Long> targetPostIds= new ArrayList<>();
+        List<Long> targetPostIds = new ArrayList<>();
         List<Long> targetMemberIds = new ArrayList<>();
         for (Tuple tuple : blames) {
-            if(tuple.get(blame.targetPostId) == null ) {
+            if (tuple.get(blame.targetPostId) == null) {
                 targetPostIds.add(tuple.get(blame.targetPostId));
             }
-            if(tuple.get(blame.targetMemberId) == null ) {
+            if (tuple.get(blame.targetMemberId) == null) {
                 targetMemberIds.add(tuple.get(blame.targetMemberId));
             }
         }
 
-        //System.out.println("blames LOG");
-        // 중복된 글을 제외하고 랜덤으로 limit+1개의 글을 가져옵니다.
         JPAQuery<Post> postHashTagsQuery = query.select(post)
                 .from(post)
                 .leftJoin(post.hashTagMaps, hashTagMap).fetchJoin()
@@ -390,7 +419,7 @@ public class PostService {
         List<Post> postsWithComments = postCommentsQuery.fetch();
         Map<Long, Post> postMap = postsWithHashTags.stream()
                 .collect(Collectors.toMap(Post::getPost_id, Function.identity()));
-        int i=0;
+        int i = 0;
         for (Post postMapValue : postMap.values()) {
             if (postsWithComments.size() == 0) {
                 postMapValue.setComments(Collections.emptyList());
@@ -412,12 +441,22 @@ public class PostService {
     }
 
     public List<ResponseGetMemberPostDto> getMyPost(Long member_id) throws NotFoundException {
-        Optional<Member> member = memberRepository.findById(member_id);
-        Member realMember = member.get();
 
-        List<Post> results = realMember.getPosts();
-        // results를 최신 순으로 정렬
-        Collections.sort(results, Comparator.comparing(Post::getPost_create_time).reversed());
+        List<Post> posts = postRepository.findByMemberId(member_id);
+        List<Post> results = posts.stream()
+                .sorted(Comparator.comparing(Post::getPost_create_time).reversed())
+                .collect(Collectors.toList());
+        Map<Long, Post> postMap = results.stream()
+                .collect(Collectors.toMap(Post::getPost_id, post -> post));
+        List<Long> postIds = postMap.keySet().stream()
+                .collect(Collectors.toList());
+        List<HashTagMap> hashTagMaps = hashTagMapRepository.findAllByPostIds(postIds);
+        hashTagMaps.forEach(hashTagMap -> {
+            Post correspondingPost =  postMap.get((hashTagMap.getPost().getPost_id()));
+            if (correspondingPost != null) {
+                correspondingPost.setHashTagMaps(Collections.singletonList(hashTagMap));
+            }
+        });
 
         List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
         if (results.size() == 0) {

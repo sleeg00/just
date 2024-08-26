@@ -28,6 +28,7 @@ public class Post {
     @CollectionTable(name = "post_content", joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "content", length = 300)
     @JsonIgnore
+
     private List<String> postContent;
     @Column(name = "post_picture")
     private Long post_picture;
