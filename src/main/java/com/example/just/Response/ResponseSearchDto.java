@@ -1,9 +1,9 @@
 package com.example.just.Response;
 
+import com.example.just.Dao.PostContent;
 import com.example.just.Document.PostDocument;
 import java.util.Date;
 import java.util.List;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
