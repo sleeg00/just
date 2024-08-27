@@ -3,6 +3,7 @@ package com.example.just.Response;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
+import com.example.just.Dao.PostContent;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,7 +15,7 @@ import lombok.Setter;
 public class ResponseGetMemberPostDto {
     private Long post_id;
 
-    private List<String> post_content;
+    private List<PostContent> post_content;
     private List<String> hash_tag;    //글 태그
 
     private Long post_picture;
