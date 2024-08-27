@@ -4,13 +4,13 @@ package com.example.just.Service;
 import static com.example.just.Dao.QComment.comment;
 import static com.example.just.Dao.QHashTagMap.hashTagMap;
 
-import com.example.just.Dao.Comment;
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 
 
+import com.example.just.Dao.PostContent;
 import com.example.just.Dao.QBlame;
 import com.example.just.Dao.QHashTag;
 import com.example.just.Dao.QHashTagMap;
@@ -24,6 +24,7 @@ import com.example.just.Repository.BlameRepository;
 
 import com.example.just.Repository.HashTagESRepository;
 import com.example.just.Repository.HashTagMapRepository;
+import com.example.just.Repository.PostContentRepository;
 import com.example.just.Response.ResponseGetMemberPostDto;
 import com.example.just.Response.ResponsePutPostDto;
 import com.example.just.Mapper.PostMapper;
@@ -38,7 +39,6 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.function.Function;
-import org.h2.result.MergedResult;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -63,6 +63,8 @@ public class PostService {
     private MemberRepository memberRepository;
     @Autowired
     private HashTagRepository hashTagRepository;
+    @Autowired
+    private PostContentRepository postContentRepository;
 
     @Autowired
     private HashTagESRepository hashTagESRepository;
@@ -451,6 +453,7 @@ public class PostService {
         List<Long> postIds = postMap.keySet().stream()
                 .collect(Collectors.toList());
         List<HashTagMap> hashTagMaps = hashTagMapRepository.findAllByPostIds(postIds);
+
         hashTagMaps.forEach(hashTagMap -> {
             Post correspondingPost =  postMap.get((hashTagMap.getPost().getPost_id()));
             if (correspondingPost != null) {

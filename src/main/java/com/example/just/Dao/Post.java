@@ -10,6 +10,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 @Entity
 @Table(name = "post")
@@ -24,12 +26,10 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long post_id;
 
-    @ElementCollection
-    @CollectionTable(name = "post_content", joinColumns = @JoinColumn(name = "post_id"))
-    @Column(name = "content", length = 300)
-    @JsonIgnore
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+@Fetch(FetchMode.SELECT)
+    private List<PostContent> postContent = new ArrayList<>();
 
-    private List<String> postContent;
     @Column(name = "post_picture")
     private Long post_picture;
 
@@ -65,7 +65,8 @@ public class Post {
     @JsonIgnore
     private Member member;
 
-    @OneToMany(mappedBy = "post", orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "post", orphanRemoval = true, fetch = FetchType.EAGER)
+
     private List<Comment> comments = new ArrayList<>();
     @Column(name = "blamed_count")
     private Long blamedCount;
@@ -78,7 +79,13 @@ public class Post {
     }
 
     public void writePost(PostPostDto postDto, Member member) { // 글 쓰기 생성자
-        List<String> contentList = postDto.getPost_content();
+        List<PostContent> contentList = new ArrayList<>();
+        for(int i=0; i<postDto.getPost_content().size(); i++){
+            PostContent postContent = new PostContent();
+            postContent.setContent(postDto.getPost_content().get(i));
+            postContent.setPost(this);
+            contentList.add(postContent);
+        }
         this.postContent = contentList;
         this.post_picture = postDto.getPost_picture();
         this.secret = postDto.getSecret();
@@ -129,7 +136,14 @@ public class Post {
         this.setPost_like(post.getPost_like());
         this.post_picture = postDto.getPost_picture();
         this.secret = postDto.getSecret();
-        this.postContent = postDto.getPost_content();
+        List<PostContent> contentList = new ArrayList<>();
+        for(int i=0; i<postDto.getPost_content().size(); i++){
+            PostContent postContent = new PostContent();
+            postContent.setContent(postDto.getPost_content().get(i));
+            postContent.setPost(this);
+            contentList.add(postContent);
+        }
+        this.postContent = contentList;
         this.hashTagMaps = new ArrayList<>();
         for (int i = 0; i < postDto.getHash_tage().size(); i++) {
             HashTagMap hashTagMap = new HashTagMap();
