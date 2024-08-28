@@ -1,0 +1,13 @@
+global: # Metric 정보 수집 주기
+  scrape_interval: 5s
+
+scrape_configs: # 작업 이릉 명시
+  - job_name: "prometheus"
+    static_configs:
+      - targets:
+          - "localhost:9090" # 요청 보낼 host
+  - job_name: "springboot"
+    metrics_path: "/actuator/prometheus" # 정보를 가져올 경로
+    static_configs:
+      - targets:
+          - "host.docker.internal:9000"

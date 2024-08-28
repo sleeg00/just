@@ -253,7 +253,8 @@ public class KakaoService {
             userbyEmail = userRepository.save(userbyEmail);
             accesstoken = jwtProvider.createaccessToken(userbyEmail);
             refreshtoken = jwtProvider.createRefreshToken(userbyEmail);
-            userbyEmail.setRefreshToken(refreshtoken);
+            userbyEmail.setRefreshToken("Bearer " +accesstoken);
+            //Test용으로 accessToken으로 저장하도록 교체
             userRepository.save(userbyEmail);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, "Bearer " + accesstoken);
@@ -263,7 +264,6 @@ public class KakaoService {
             return ResponseEntity.ok().headers(httpHeaders).body(responseMemberDto);
         }
         //jwt토큰생성
-
         return new ResponseEntity<>("이미 회원가입되어있는 유저입니다.", HttpStatus.OK);
 
     }
