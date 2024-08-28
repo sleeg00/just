@@ -12,13 +12,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication
-@EnableElasticsearchRepositories(
-		includeFilters = {
-				@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {PostContentESRespository.class,
-						HashTagESRepository.class}),
-		}
-)
-@EnableScheduling
 public class JustApplication {
 
 
