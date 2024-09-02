@@ -1,7 +1,9 @@
 HELP.md
 
 .gradle
-
+*.war
+ngrinder
+/ngrinder
 build/classes
 build/generated
 build/resources
@@ -10,8 +12,8 @@ build/tmp
 !**/src/main/**/build/
 !**/src/test/**/build/
 /src/main/resources/application.yml
+ngrinder-controller-3.5.9-p1.war
 
-<<<<<<<< HEAD:.gitignore
 /src/test/resources/application.yml
 /application.yml
 
@@ -46,8 +48,5 @@ out/
 /.nb-gradle/
 
 ### VS Code ###
-<<<<<<< HEAD
+
 .vscode/
-=======
-.vscode/
->>>>>>> 0ba3d96e28582a106923c0002d0de00d86636cc6
