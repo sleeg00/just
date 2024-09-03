@@ -1,6 +1,7 @@
 package com.example.just.Repository;
 
 import com.example.just.Dao.Member;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -18,4 +19,6 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 
     boolean existsByRefreshToken(String token);
     Optional<Member> findByRefreshToken(String token);
+
+
 }
