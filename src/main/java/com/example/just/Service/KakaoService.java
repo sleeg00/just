@@ -38,19 +38,19 @@ public class KakaoService {
     private String address;
 
     //카카오 토큰으로 카카오로부터 토큰발급(로그인)
-    public ResponseEntity loginKakao(String token) throws IOException{
+    public ResponseEntity loginKakao(String token) throws IOException {
         String accessToken = null;
         String refreshToken = null;
         Member userbyEmail = null;
-        try{
+        try {
             //카카오토큰으로
             MemberDto user = getKakaoUser(token);
             userbyEmail = userRepository.findByEmail(user.getEmail());
             //DB에 없는 사용자라면 회원가입 처리
-            if(userbyEmail == null){
+            if (userbyEmail == null) {
                 return new ResponseEntity<>("/api/kakao/signup", HttpStatus.OK);
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         //jwt토큰생성
@@ -70,22 +70,22 @@ public class KakaoService {
         userRepository.save(userbyEmail);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, "Bearer " + accessToken);
-        httpHeaders.add("refresh_token",refreshToken);
-        ResponseMemberDto responseMemberDto = new ResponseMemberDto(userbyEmail.getEmail(),userbyEmail.getNickname());
+        httpHeaders.add("refresh_token", refreshToken);
+        ResponseMemberDto responseMemberDto = new ResponseMemberDto(userbyEmail.getEmail(), userbyEmail.getNickname());
         return ResponseEntity.ok().headers(httpHeaders).body(responseMemberDto);
     }
 
     //카카오 토큰으로 회원가입
-    public ResponseEntity signUpKakao(String token, String nickname){
+    public ResponseEntity signUpKakao(String token, String nickname) {
         String accesstoken = null;
         String refreshtoken = null;
         Member userbyEmail = null;
-        try{
+        try {
             //카카오토큰으로
             MemberDto user = getKakaoUser(token);
             userbyEmail = userRepository.findByEmail(user.getEmail());
             //DB에 없는 사용자라면 회원가입 처리
-            if(userbyEmail == null){
+            if (userbyEmail == null) {
                 userbyEmail = Member.builder()
                         .email(user.getEmail())
                         .provider(user.getProvider())
@@ -102,11 +102,12 @@ public class KakaoService {
                 userRepository.save(userbyEmail);
                 HttpHeaders httpHeaders = new HttpHeaders();
                 httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, "Bearer " + accesstoken);
-                httpHeaders.add("refresh_token",refreshtoken);
-                ResponseMemberDto responseMemberDto = new ResponseMemberDto(userbyEmail.getEmail(),userbyEmail.getNickname());
+                httpHeaders.add("refresh_token", refreshtoken);
+                ResponseMemberDto responseMemberDto = new ResponseMemberDto(userbyEmail.getEmail(),
+                        userbyEmail.getNickname());
                 return ResponseEntity.ok().headers(httpHeaders).body(responseMemberDto);
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         //jwt토큰생성
@@ -114,28 +115,29 @@ public class KakaoService {
         return new ResponseEntity<>("이미 회원가입되어있는 유저입니다.", HttpStatus.OK);
 
     }
+
     //카카오토큰 페이로드
-    public MemberDto getKakaoUser(String token) throws IOException{
+    public MemberDto getKakaoUser(String token) throws IOException {
         String host = "https://kapi.kakao.com/v2/user/me";
         String id;
         String email = "";
         MemberDto user = null;
         //access_token을 이용해 사용자 정보 조회
-        try{
+        try {
             URL url = new URL(host);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
+            conn.setRequestMethod("GET");
             conn.setDoOutput(true);
-            conn.setRequestProperty("Authorization","Bearer "+token);//헤더에 토큰보내기
+            conn.setRequestProperty("Authorization", "Bearer " + token);//헤더에 토큰보내기
 
             int responseCode = conn.getResponseCode();
-
+            System.out.println(" responseCode = " + responseCode);
             //JSON타입 메세지 읽기
             BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String line = "";
             String result = "";
-            while ((line = br.readLine())!=null){
-                result +=line;
+            while ((line = br.readLine()) != null) {
+                result += line;
             }
 
             //userDto 생성후 리턴
@@ -145,13 +147,13 @@ public class KakaoService {
             email = elem.getAsJsonObject().get("kakao_account").getAsJsonObject().get("email").getAsString();
             user = MemberDto.builder().provider_id(id).email(email).provider("kakao").build();
             br.close();
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return user;
     }
 
-    public String getToken(String code) throws IOException{
+    public String getToken(String code) throws IOException {
         String host = "https://kauth.kakao.com/oauth/token";
         URL url = new URL(host);
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -163,8 +165,8 @@ public class KakaoService {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(urlConnection.getOutputStream()));
             StringBuilder sb = new StringBuilder();
             sb.append("grant_type=authorization_code");
-            sb.append("&client_id=55ec14b78e17e978a4a3b64971060784");
-            sb.append("&redirect_uri=http://"+address+":9000/api/kakao/access_token");
+            sb.append("&client_id=0005286a8d075ef9b3dbec4d26d0f505");
+            sb.append("&redirect_uri=http://13.209.204.40:9000/api/kakao/access_token");
             sb.append("&code=" + code);
 
             bw.write(sb.toString());
@@ -201,12 +203,15 @@ public class KakaoService {
         }
         return token;
     }
+
     //닉네임 변경
-    public ResponseEntity changeNickname(HttpServletRequest request,String nickname){
+    public ResponseEntity changeNickname(HttpServletRequest request, String nickname) {
         String token = jwtProvider.getAccessToken(request);
         String id = jwtProvider.getIdFromToken(token);
         Member member = userRepository.findById(Long.valueOf(id)).get();
-        if(member.getNickname().equals(nickname)) return new ResponseEntity<>("이미 같은 닉네임",HttpStatus.OK);
+        if (member.getNickname().equals(nickname)) {
+            return new ResponseEntity<>("이미 같은 닉네임", HttpStatus.OK);
+        }
         Member saveMember = Member.builder()
                 .id(member.getId())
                 .authority(member.getAuthority())
@@ -219,11 +224,47 @@ public class KakaoService {
                 .refreshToken(member.getRefreshToken())
                 .nickname(nickname).build();
         userRepository.save(saveMember);
-        return new ResponseEntity<>("닉네임 변경",HttpStatus.OK);
+        return new ResponseEntity<>("닉네임 변경", HttpStatus.OK);
     }
+
     //멤버조회(테스트용)
-    public ResponseEntity info(){
+    public ResponseEntity info() {
         List<Member> list = userRepository.findAll();
-        return new ResponseEntity<>(list,HttpStatus.OK);
+        return new ResponseEntity<>(list, HttpStatus.OK);
+    }
+    public ResponseEntity testSignUpKakao(String email, String nickname) {
+        String accesstoken = null;
+        String refreshtoken = null;
+        Member userbyEmail = null;
+        MemberDto user = MemberDto.builder().provider_id(email).email(email).provider("kakao").build();
+
+        userbyEmail = userRepository.findByEmail(user.getEmail());
+        //DB에 없는 사용자라면 회원가입 처리
+        if (userbyEmail == null) {
+            userbyEmail = Member.builder()
+                    .email(user.getEmail())
+                    .provider(user.getProvider())
+                    .provider_id(user.getProvider_id())
+                    .authority(Role.ROLE_USER)
+                    .nickname(nickname)
+                    .blameCount(0)
+                    .blamedCount(0)
+                    .build();
+            userbyEmail = userRepository.save(userbyEmail);
+            accesstoken = jwtProvider.createaccessToken(userbyEmail);
+            refreshtoken = jwtProvider.createRefreshToken(userbyEmail);
+            userbyEmail.setRefreshToken("Bearer " +accesstoken);
+            //Test용으로 accessToken으로 저장하도록 교체
+            userRepository.save(userbyEmail);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, "Bearer " + accesstoken);
+            httpHeaders.add("refresh_token", refreshtoken);
+            ResponseMemberDto responseMemberDto = new ResponseMemberDto(userbyEmail.getEmail(),
+                    userbyEmail.getNickname());
+            return ResponseEntity.ok().headers(httpHeaders).body(responseMemberDto);
+        }
+        //jwt토큰생성
+        return new ResponseEntity<>("이미 회원가입되어있는 유저입니다.", HttpStatus.OK);
+
     }
 }

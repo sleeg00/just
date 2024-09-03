@@ -86,7 +86,12 @@ public class PostController {
         Long member_id = getAccessTokenOfMemberId(request);
         return postService.write(member_id, postDto);
     }
-
+    @PostMapping("/test/post/post")
+    public PostPostDto testWrite(HttpServletRequest request,
+                             @RequestParam Long member_id,
+                             @RequestBody PostPostDto postDto) {
+        return postService.write(member_id, postDto);
+    }
     @Operation(summary = "게시글 삭제 api", description = "\n 글이 삭제되면 value : 삭제 완료"
             + "\n 글이 없으면 value : 글이 없습니다.")
     @DeleteMapping("/delete/post")

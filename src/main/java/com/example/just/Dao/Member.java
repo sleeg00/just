@@ -45,21 +45,22 @@
       private String refreshToken;
 
       @Builder.Default //안 써도 되는데 경고떠서 그냥 부침
-      @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE,fetch = FetchType.EAGER,  orphanRemoval=true)
+      @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE,fetch = FetchType.LAZY,  orphanRemoval=true)
+      // FetchType.EAGER -> FetchType.LAZY, EntityGraph를 통해 FetchType을 정할 것이다.
       @JsonIgnore
       private List<Post> posts = new ArrayList<>();
 
-      @Builder.Default //안 써도 되는데 경고떠서 그냥 부침
+      @Builder.Default
       @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE,fetch = FetchType.LAZY,  orphanRemoval=true)
       @JsonIgnore
       private List<Comment> comments = new ArrayList<>();
 
       @Builder.Default
-      @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE)
+      @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
       private List<Post> likedPosts = new ArrayList<>();
 
       @Builder.Default
-      @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE)
+      @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
       private List<Comment> likedComments = new ArrayList<>();
       public void addBlamed(){
           blamedCount++;
