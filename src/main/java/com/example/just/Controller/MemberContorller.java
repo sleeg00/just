@@ -29,7 +29,11 @@ public class MemberContorller {
     public ResponseEntity loginKakao(@RequestParam String access_token) throws IOException{
         return kakaoService.loginKakao(access_token);
     }
-
+    @PostMapping("/test/singup")
+    @ApiOperation(value = "카카오 로그인 api", notes = "액세스토큰만 넘기기, 회원가입이 안되어있으면 /api/kakao/signup를 string로 리턴함")
+    public ResponseEntity testLoginKakao(@RequestParam String email) throws IOException{
+        return kakaoService.testSignUpKakao(email, email);
+    }
     @PostMapping("/kakao/signup")
     @ApiOperation(value = "카카오 회원가입 api", notes = "닉네임이랑 액세스토큰 같이 넘기기")
     public ResponseEntity signUpKakao(@RequestParam String access_token,@RequestParam String nickname){

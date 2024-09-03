@@ -1,17 +1,14 @@
 package com.example.just.Document;
 
-import com.example.just.Dao.HashTag;
 import com.example.just.Dao.Post;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.example.just.Dao.PostContent;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,9 +16,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.format.annotation.DateTimeFormat;
 
 @Document(indexName = "posts")
 @Getter
@@ -81,7 +75,11 @@ public class PostDocument {
 
     public PostDocument(Post post) {
         this.id = post.getPost_id();
-        this.postContent = post.getPostContent();
+        List<String> contentList = new ArrayList<>();
+        for(int i=0; i<post.getPostContent().size(); i++) {
+            contentList.add(post.getPostContent().get(i).getContent());
+        }
+        this.postContent = contentList;
         this.hashTag = post.getHashTagMaps().stream()
                 .map(hashTagMap -> hashTagMap.getHashTag().getName())
                 .collect(Collectors.toList());
