@@ -3,6 +3,8 @@ package com.example.just.Repository;
 import com.example.just.Dao.Member;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,7 +20,9 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     List<Member> findByBlamedCountGreaterThanEqualOrderByBlamedCountDesc(int blamed_count);
 
     boolean existsByRefreshToken(String token);
-    Optional<Member> findByRefreshToken(String token);
+    //Optional<Member> findByRefreshToken(String token);
+    @Query("SELECT m.refreshToken FROM Member m WHERE m.refreshToken = :token")
+    String findByRefreshToken(@Param("token") String token);
 
 
 }

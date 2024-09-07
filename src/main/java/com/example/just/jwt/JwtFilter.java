@@ -32,6 +32,7 @@ public class JwtFilter extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+       // System.out.println("doFilter");
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
         String requestURI = httpServletRequest.getRequestURI();
@@ -40,18 +41,22 @@ public class JwtFilter extends GenericFilterBean {
         if(StringUtils.hasText(accessToken)&& jwtProvider.validateToken(accessToken)){
             Authentication authentication = jwtProvider.getAuthentication(accessToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            System.out.println("정상작동");
-            System.out.println("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}" + authentication.getName() + requestURI);
+           // System.out.println("정상작동");
+           // System.out.println("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}" + authentication.getName() + requestURI);
         }
         else if(!jwtProvider.validateToken(accessToken)&&refreshToken!=null){
-            if(jwtProvider.validateToken(refreshToken)&& jwtProvider.existsRefreshToken(refreshToken)){
-                System.out.println("토큰터지고 리프레시 있음");
-                Member member = jwtProvider.getMemberFromRefreshToken(refreshToken);
+            String token = jwtProvider.getMemberFromRefreshToken(refreshToken);
+            String member = token.replace("Bearer ", "");
+            if(jwtProvider.validateToken(member)&& member!=null){
+               // System.out.println("토큰터지고 리프레시 있음");
+                //String member = jwtProvider.getMemberFromRefreshToken(refreshToken);
                 String newToken = jwtProvider.createaccessToken(member);
                 HttpHeaders httpHeaders = new HttpHeaders();
                 ((HttpServletResponse) response).setHeader(JwtFilter.AUTHORIZATION_HEADER,"Bearer " + newToken);
                 Authentication authentication = jwtProvider.getAuthentication(newToken);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+               // System.out.println(authentication.getName());
+              //  System.out.println(newToken);
             }
         }else{
             System.out.println("유효한 JWT 토큰이 없습니다, uri: {}" + requestURI);
