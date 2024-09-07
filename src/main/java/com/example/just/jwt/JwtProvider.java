@@ -57,7 +57,16 @@ public class JwtProvider implements InitializingBean {
                 .setExpiration(new Date(System.currentTimeMillis() + access_token_time))
                 .compact();
     }
-
+    public String createaccessToken(String token){
+        return Jwts.builder()
+                .setSubject(Long.toString(Long.parseLong(getIdFromToken(token))))
+                .claim(AUTHORITIES_KEY, getRoleFromToken(token))
+                .signWith(key,SignatureAlgorithm.HS512)
+                .setAudience(getEmailFromToken(token))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + access_token_time))
+                .compact();
+    }
     public String createRefreshToken(Member member){
         return Jwts.builder()
                 .signWith(key,SignatureAlgorithm.HS512)
@@ -100,8 +109,8 @@ public class JwtProvider implements InitializingBean {
         return null;
     }
 
-    public Member getMemberFromRefreshToken(String refreshToken){
-        return memberRepository.findByRefreshToken(refreshToken).get();
+   public String getMemberFromRefreshToken(String refreshToken){
+        return memberRepository.findByRefreshToken(refreshToken);
 
     }
 
@@ -109,6 +118,10 @@ public class JwtProvider implements InitializingBean {
     public String getIdFromToken(String token){
         Claims claims = Jwts.parser().setSigningKey(key).parseClaimsJws(token).getBody();
         return claims.getSubject();
+    }
+    public String getRoleFromToken(String token){
+        Claims claims = Jwts.parser().setSigningKey(key).parseClaimsJws(token).getBody();
+        return claims.get(AUTHORITIES_KEY).toString();
     }
 
     //토큰으로부터 email추출
@@ -123,13 +136,13 @@ public class JwtProvider implements InitializingBean {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            System.out.println("잘못된 JWT 서명입니다.");
+          //  System.out.println("잘못된 JWT 서명입니다.");
         } catch (ExpiredJwtException e) {
-            System.out.println("만료된 JWT 토큰입니다.");
+          //  System.out.println("만료된 JWT 토큰입니다.");
         } catch (UnsupportedJwtException e) {
-            System.out.println("지원되지 않는 JWT 토큰입니다.");
+           // System.out.println("지원되지 않는 JWT 토큰입니다.");
         } catch (IllegalArgumentException e) {
-            System.out.println("JWT 토큰이 잘못되었습니다.");
+           // System.out.println("JWT 토큰이 잘못되었습니다.");
         }
         return false;
     }
