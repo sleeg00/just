@@ -2,6 +2,7 @@ package com.example.just.jwt;
 
 import com.example.just.Dao.Member;
 import com.example.just.Repository.MemberRepository;
+import com.example.just.Repository.RefreshTokenRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -37,6 +38,8 @@ public class JwtProvider implements InitializingBean {
     private final long refresh_token_time = (1000 * 60) * 60 * 24 *3600L;//60분 * 24*30
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -110,7 +113,7 @@ public class JwtProvider implements InitializingBean {
     }
 
    public String getMemberFromRefreshToken(String refreshToken){
-        return memberRepository.findByRefreshToken(refreshToken);
+        return refreshTokenRepository.findByRefreshToken(refreshToken);
 
     }
 
