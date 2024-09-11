@@ -45,8 +45,8 @@ public class JwtFilter extends GenericFilterBean {
            // System.out.println("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}" + authentication.getName() + requestURI);
         }
         else if(!jwtProvider.validateToken(accessToken)&&refreshToken!=null){
-            String token = jwtProvider.getMemberFromRefreshToken(refreshToken);
-            String member = token.replace("Bearer ", "");
+            String token= jwtProvider.getMemberFromRefreshToken(refreshToken);
+            String member = refreshToken.replace("Bearer ", "");
             if(jwtProvider.validateToken(member)&& member!=null){
                // System.out.println("토큰터지고 리프레시 있음");
                 //String member = jwtProvider.getMemberFromRefreshToken(refreshToken);
