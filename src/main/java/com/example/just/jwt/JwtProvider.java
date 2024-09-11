@@ -113,7 +113,7 @@ public class JwtProvider implements InitializingBean {
     }
 
    public String getMemberFromRefreshToken(String refreshToken){
-        return refreshTokenRepository.findByRefreshToken(refreshToken);
+        return memberRepository.findByRefreshToken(refreshToken);
 
     }
 
