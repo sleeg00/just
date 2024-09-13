@@ -92,7 +92,7 @@ public class PostController {
                              @RequestBody PostPostDto postDto) {
         Long memberid = getAccessTokenOfMemberId(request);
         System.out.println(memberid);
-       // return postService.write(member_id, postDto);
+        postService.write(member_id, postDto);
     }
     @Operation(summary = "게시글 삭제 api", description = "\n 글이 삭제되면 value : 삭제 완료"
             + "\n 글이 없으면 value : 글이 없습니다.")
