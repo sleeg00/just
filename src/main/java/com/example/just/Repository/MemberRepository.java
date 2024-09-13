@@ -21,7 +21,7 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 
     boolean existsByRefreshToken(String token);
     //Optional<Member> findByRefreshToken(String token);
-    @Query("SELECT m.refreshToken FROM Member m WHERE m.refreshToken = MD5(:token)")
+    @Query("SELECT m.refreshToken FROM Member m WHERE m.refreshToken = :token")
     String findByRefreshToken(@Param("token") String token);
 
 

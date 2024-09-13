@@ -27,7 +27,6 @@ public class Post {
     private Long post_id;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-@Fetch(FetchMode.SELECT)
     private List<PostContent> postContent = new ArrayList<>();
 
     @Column(name = "post_picture")
@@ -65,8 +64,7 @@ public class Post {
     @JsonIgnore
     private Member member;
 
-    @OneToMany(mappedBy = "post", orphanRemoval = true, fetch = FetchType.EAGER)
-
+    @OneToMany(mappedBy = "post", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
     @Column(name = "blamed_count")
     private Long blamedCount;

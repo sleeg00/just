@@ -299,14 +299,14 @@ public class PostService {
             // ResponseGetMemberPostDto 생성 및 필드 세팅
             ResponseGetMemberPostDto responseGetMemberPostDto = new ResponseGetMemberPostDto();
             responseGetMemberPostDto.setPost_id(post.getPost_id());
-            responseGetMemberPostDto.setPost_content(post.getPostContent());
+      //      responseGetMemberPostDto.setPost_content(post.getPostContent());
             responseGetMemberPostDto.setPost_picture(post.getPost_picture());
             responseGetMemberPostDto.setHash_tag(hashTagNames);
             responseGetMemberPostDto.setPost_create_time(post.getPost_create_time());
             responseGetMemberPostDto.setBlamed_count(Math.toIntExact(post.getBlamedCount()));
             responseGetMemberPostDto.setSecret(post.getSecret());
             responseGetMemberPostDto.setPost_like_size(post.getPost_like());
-            responseGetMemberPostDto.setComment_size((long) post.getComments().size());
+          //  responseGetMemberPostDto.setComment_size((long) post.getComments().size());
 
             if (member_id != -1) {
                 responseGetMemberPostDto.setMine(post.getMember().getId().equals(member_id));
@@ -406,8 +406,16 @@ public class PostService {
                         hashTagMap.hashTag.id.eq(hashTag.id))
                 .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
                 .limit(limit);
-
+        System.out.println("why?");
         List<Post> postsWithHashTags = postHashTagsQuery.fetch();
+        System.out.println("?");
+        for(int i=0; i<postsWithHashTags.size(); i++) {
+           for(int j=0; j<postsWithHashTags.get(i).getPostContent().size(); j++) {
+               System.out.println(postsWithHashTags.get(i).getPostContent().get(j).getContent());
+               System.out.println("I : " +i);
+           }
+        }
+        System.out.println("not?");
         List<Long> postIds = postsWithHashTags.stream()
                 .map(Post::getPost_id)
                 .collect(Collectors.toList());
@@ -417,10 +425,11 @@ public class PostService {
                 .leftJoin(post.comments, comment).fetchJoin()
                 .where(post.post_id.in(postIds),
                         comment.post.post_id.in(postIds));
-
+        System.out.println("Innner?");
         List<Post> postsWithComments = postCommentsQuery.fetch();
         Map<Long, Post> postMap = postsWithHashTags.stream()
                 .collect(Collectors.toMap(Post::getPost_id, Function.identity()));
+        System.out.println("here?");
         int i = 0;
         for (Post postMapValue : postMap.values()) {
             if (postsWithComments.size() == 0) {
@@ -429,7 +438,7 @@ public class PostService {
                 postMapValue.setComments(postsWithComments.get(i++).getComments());
             }
         }
-
+        System.out.println("Here?");
         List<Post> results = new ArrayList<>(postMap.values());
 
         List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
@@ -438,8 +447,10 @@ public class PostService {
         } else {
             getPostDtos = createResponseGetMemberPostDto(results, member_id);
             // 가져온 글들의 ID를 저장합니다.
+            System.out.println("Where?");
             return resultPostIds(viewedPostIds, results, getPostDtos);
         }
+
     }
 
     public List<ResponseGetMemberPostDto> getMyPost(Long member_id) throws NotFoundException {
