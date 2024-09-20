@@ -21,7 +21,7 @@ public class PostContent {
     @Column(name = "content", length = 300)
     private String content;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     @JsonIgnore
     private Post post;
