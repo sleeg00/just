@@ -14,7 +14,7 @@ import lombok.Setter;
 public class ResponseGetPostDto {
     private Long post_id;
 
-    private List<PostContent> post_content;
+    private PostContent post_content;
     private List<String> hash_tag;
 
     private Long post_picture;
