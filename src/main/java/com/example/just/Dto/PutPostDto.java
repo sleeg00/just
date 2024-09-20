@@ -2,6 +2,7 @@ package com.example.just.Dto;
 
 import com.example.just.Dao.Comment;
 import com.example.just.Dao.Member;
+import com.example.just.Dao.PostContent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Date;
@@ -23,7 +24,7 @@ import java.util.List;
 public class PutPostDto {
     private Long post_id;
 
-    private List<String> post_content;    //글 내용
+    private PostContent post_content;    //글 내용
 
     private List<String> hash_tage;    //글 태그/글 태그
 

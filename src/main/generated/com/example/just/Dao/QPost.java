@@ -42,7 +42,7 @@ public class QPost extends EntityPathBase<Post> {
 
     public final NumberPath<Long> post_picture = createNumber("post_picture", Long.class);
 
-    public final ListPath<PostContent, QPostContent> postContent = this.<PostContent, QPostContent>createList("postContent", PostContent.class, QPostContent.class, PathInits.DIRECT2);
+    public final QPostContent postContent;
 
     public final BooleanPath secret = createBoolean("secret");
 
@@ -65,6 +65,7 @@ public class QPost extends EntityPathBase<Post> {
     public QPost(Class<? extends Post> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.member = inits.isInitialized("member") ? new QMember(forProperty("member")) : null;
+        this.postContent = inits.isInitialized("postContent") ? new QPostContent(forProperty("postContent"), inits.get("postContent")) : null;
     }
 
 }

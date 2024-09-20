@@ -3,6 +3,7 @@ package com.example.just.Dto;
 import com.example.just.Dao.Comment;
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.Member;
+import com.example.just.Dao.PostContent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -20,7 +21,7 @@ import java.util.List;
 //
 public class PostPostDto {
 
-    private List<String> post_content;
+    private PostContent post_content;
 
     private List<String> hash_tag;    //글 태그
 

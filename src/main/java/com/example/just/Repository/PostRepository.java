@@ -18,4 +18,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = {"comments", "member"}, type = EntityGraph.EntityGraphType.LOAD)
     List<Post> findByMemberId(Long member_id);
 
+    @Query("SELECT COUNT(p) FROM Post p")
+    long countAllPosts();
 }

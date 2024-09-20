@@ -3,6 +3,8 @@ package com.example.just.Service;
 
 import static com.example.just.Dao.QComment.comment;
 import static com.example.just.Dao.QHashTagMap.hashTagMap;
+import static com.example.just.Dao.QPostContent.postContent;
+
 
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
@@ -10,11 +12,11 @@ import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 
 
-import com.example.just.Dao.PostContent;
 import com.example.just.Dao.QBlame;
 import com.example.just.Dao.QHashTag;
 import com.example.just.Dao.QHashTagMap;
 import com.example.just.Dao.QPost;
+import com.example.just.Dao.QPostContent;
 import com.example.just.Document.HashTagDocument;
 import com.example.just.Document.PostDocument;
 import com.example.just.Dto.GptRequestDto;
@@ -111,17 +113,10 @@ public class PostService {
         Post post = new Post();
         //해시태그가 NULL일 경우 Gpt로 해시태그 생성
         if (postDto.getHash_tag() == null) {
-            String prompt = "";
-            for (int i = 0; i < postDto.getPost_content().size(); i++) {
-                prompt += postDto.getPost_content().get(i) + " ";
-            }
-            GptRequestDto gptRequestDto = new GptRequestDto(prompt);
-            List<String> tag = gptService.getTag(gptRequestDto);
-            postDto.setHash_tag(tag);
-        }
-        List<String> content = new ArrayList<>(postDto.getPost_content()); // 코드 최적화
 
-        postDto.setPost_content(content);
+        }
+
+        postDto.setPost_content(postDto.getPost_content());
         post.writePost(postDto, member);
         Post p = postRepository.save(post);
 
@@ -176,11 +171,8 @@ public class PostService {
 
         deleteHashTag(checkPost);
 
-        List<String> content = new ArrayList<>();
-        for (int i = 0; i < postDto.getPost_content().size(); i++) {
-            content.add(postDto.getPost_content().get(i));
-        }
-        postDto.setPost_content(content);
+
+        postDto.setPost_content(postDto.getPost_content());
 
         checkPost.changePost(postDto, member, checkPost);
 
@@ -275,11 +267,10 @@ public class PostService {
 
     private ResponseGetPost resultPostIds(Set<Long> viewedPostIds, List<Post> results,
                                           List<ResponseGetMemberPostDto> getPostDtos) {
-        Set<Long> resultPostIds = results.stream().map(Post::getPost_id).collect(Collectors.toSet());
-        viewedPostIds.addAll(resultPostIds);
-        Collection<Post> allPost = postRepository.findAll(); // redis로 전체 사이즈 조회하면 좋을 듯?
+        int resultPostIds = 1;
+        long allPosts = postRepository.countAllPosts();
         // hasNext와 nextCursor를 계산합니다.
-        boolean hasNext = viewedPostIds.size() < allPost.size();
+        boolean hasNext = viewedPostIds.size() < allPosts;
         // Slice 객체를 생성해서 반환합니다.
         ResponseGetPost responseGetPost = new ResponseGetPost(
                 getPostDtos, hasNext);
@@ -365,7 +356,7 @@ public class PostService {
         QBlame blame = QBlame.blame;
         QHashTagMap hashTagMaps = QHashTagMap.hashTagMap;
         QHashTag hashTag = QHashTag.hashTag;
-
+        QPostContent postContent = QPostContent.postContent;
         Set<Long> viewedPostIds = new HashSet<>();
         // 이전에 본 글들의 ID를 가져옵니다.
         if (cursor != null) {
@@ -398,23 +389,20 @@ public class PostService {
                 .from(post)
                 .leftJoin(post.hashTagMaps, hashTagMap).fetchJoin()
                 .leftJoin(hashTagMaps.hashTag, hashTag).fetchJoin()
+                .leftJoin(post.postContent, postContent).fetchJoin()
                 .where(post.post_id.notIn(viewedPostIds),
                         post.post_create_time.isNotNull(),
                         post.post_id.notIn(targetPostIds),
                         post.member.id.notIn(targetMemberIds),
                         hashTagMap.post.post_id.eq(post.post_id),
-                        hashTagMap.hashTag.id.eq(hashTag.id))
+                        hashTagMap.hashTag.id.eq(hashTag.id),
+                        postContent.post.post_id.eq(post.post_id))
                 .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
                 .limit(limit);
         System.out.println("why?");
         List<Post> postsWithHashTags = postHashTagsQuery.fetch();
         System.out.println("?");
-        for(int i=0; i<postsWithHashTags.size(); i++) {
-           for(int j=0; j<postsWithHashTags.get(i).getPostContent().size(); j++) {
-               System.out.println(postsWithHashTags.get(i).getPostContent().get(j).getContent());
-               System.out.println("I : " +i);
-           }
-        }
+
         System.out.println("not?");
         List<Long> postIds = postsWithHashTags.stream()
                 .map(Post::getPost_id)

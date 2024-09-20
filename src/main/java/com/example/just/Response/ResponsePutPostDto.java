@@ -20,7 +20,7 @@ public class ResponsePutPostDto {
 
     private Long post_id;
 
-    private List<PostContent> post_content;    //글 내용
+    private PostContent post_content;    //글 내용
 
     private List<HashTag> hash_tag;
 
