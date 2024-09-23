@@ -68,6 +68,26 @@ jobs:
           docker login -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
           docker build -t sleeg00/just:backend .
           docker push sleeg00/just:backend
+      - name: Upload script to EC2
+        uses: appleboy/scp-action@master
+        with:
+          username: ec2-user
+          host: ${{ secrets.AWS_DEV_HOSTNAME }}
+          key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
+          source: "../../scripts/token.sh"   # 로컬의 스크립트 경로
+          target: "/home/ubuntu/scripts/token.sh"   # EC2에 업로드될 경로
+
+      - name: Run MySQL Script on EC2
+        uses: appleboy/ssh-action@master
+        with:
+          username: ec2-user
+          host: ${{ secrets.AWS_DEV_HOSTNAME }}
+          key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
+          script: |
+            export MYSQL_USER=${{ secrets.MYSQL_USER }}
+            export MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            bash /home/ubuntu/scripts/token.sh
+
       # nginx.conf 경로 변경 후 도커 컴포즈 실행하기
       # 도커 허브에서 jar파일 및 pull후에 컴포즈 up
       - name: Deploy to Devd
