@@ -80,7 +80,7 @@ jobs:
       - name: Run MySQL Script on EC2
         uses: appleboy/ssh-action@master
         with:
-          username: ec2-user
+          username: ubuntu
           host: ${{ secrets.AWS_DEV_HOSTNAME }}
           key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
           script: |
