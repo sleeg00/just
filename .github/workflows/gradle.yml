@@ -84,6 +84,7 @@ jobs:
           host: ${{ secrets.AWS_DEV_HOSTNAME }}
           key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
           script: |
+            chmod +x /home/ubuntu/scripts/token.sh
             export MYSQL_USER=${{ secrets.MYSQL_USER }}
             export MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
             bash /home/ubuntu/scripts/token.sh
