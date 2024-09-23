@@ -30,7 +30,7 @@ public class PostDocument {
     private Long id;
 
     @Field(type = FieldType.Text)
-    private List<String> postContent;
+    private String postContent;
 
     @Field(type = FieldType.Text)
     private List<String> hashTag;
@@ -75,11 +75,7 @@ public class PostDocument {
 
     public PostDocument(Post post) {
         this.id = post.getPost_id();
-        List<String> contentList = new ArrayList<>();
-        for(int i=0; i<post.getPostContent().size(); i++) {
-            contentList.add(post.getPostContent().get(i).getContent());
-        }
-        this.postContent = contentList;
+        this.postContent = post.getPostContent().getContent();
         this.hashTag = post.getHashTagMaps().stream()
                 .map(hashTagMap -> hashTagMap.getHashTag().getName())
                 .collect(Collectors.toList());
