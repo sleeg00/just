@@ -75,7 +75,7 @@ jobs:
           host: ${{ secrets.AWS_DEV_HOSTNAME }}
           key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
           source: "./scripts/token.sh"   # 로컬의 스크립트 경로
-          target: "/home/ubuntu/scripts/token.sh"   # EC2에 업로드될 경로
+          target: "/home/ubuntu/scripts"   # EC2에 업로드될 경로
 
       - name: Run MySQL Script on EC2
         uses: appleboy/ssh-action@master
@@ -87,7 +87,7 @@ jobs:
             chmod +x /home/ubuntu/scripts/token.sh
             export MYSQL_USER=${{ secrets.MYSQL_USER }}
             export MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-            bash /home/ubuntu/scripts/token.sh
+            sh /home/ubuntu/scripts/token.sh
 
       # nginx.conf 경로 변경 후 도커 컴포즈 실행하기
       # 도커 허브에서 jar파일 및 pull후에 컴포즈 up
