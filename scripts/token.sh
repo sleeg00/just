@@ -6,7 +6,7 @@ MYSQL_DATABASE=just
 # MySQL 명령어 실행
 mysql  -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE <<EOF
 
-INSERT INTO RefreshToken (email, refresh_token)
+INSERT INTO Refresh_token (email, refresh_token)
 SELECT email, refresh_token
 FROM Member;
 EOF
