@@ -9,10 +9,10 @@ import java.util.List;
 @Getter
 @Setter
 public class ResponsePostCommentDtoBefore {
-    private List<PostContent> post_content;
+    private PostContent post_content;
     private List<ResponseCommentDtoBefore> comments;
 
-    public ResponsePostCommentDtoBefore(List<PostContent> content, List<ResponseCommentDtoBefore> list){
+    public ResponsePostCommentDtoBefore(PostContent content, List<ResponseCommentDtoBefore> list){
         post_content = content;
         comments = list;
     }

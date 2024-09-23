@@ -12,7 +12,7 @@ import lombok.Setter;
 public class ResponseSearchDto {
 
     private Long post_id;
-    private List<String> post_content;
+    private String post_content;
     private List<String> hash_tag;
     private Long post_picture;
     private Date post_create_time;

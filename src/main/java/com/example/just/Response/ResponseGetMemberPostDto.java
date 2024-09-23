@@ -15,7 +15,7 @@ import lombok.Setter;
 public class ResponseGetMemberPostDto {
     private Long post_id;
 
-    private List<PostContent> post_content;
+    private PostContent post_content;
     private List<String> hash_tag;    //글 태그
 
     private Long post_picture;
