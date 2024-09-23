@@ -74,7 +74,7 @@ jobs:
           username: ec2-user
           host: ${{ secrets.AWS_DEV_HOSTNAME }}
           key: ${{ secrets.AWS_DEV_PRIVATE_KEY }}
-          source: "../../scripts/token.sh"   # 로컬의 스크립트 경로
+          source: "./scripts/token.sh"   # 로컬의 스크립트 경로
           target: "/home/ubuntu/scripts/token.sh"   # EC2에 업로드될 경로
 
       - name: Run MySQL Script on EC2
