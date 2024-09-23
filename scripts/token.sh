@@ -8,4 +8,4 @@ MYSQL_DATABASE=just
 mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "
 INSERT INTO Refresh_token (email, refresh_token)
 SELECT email, refresh_token FROM Member;
-"
+" 2>&1 | tee /tmp/mysql_query.log
