@@ -7,6 +7,16 @@ ngrinder
 build/classes
 build/generated
 build/resources
+# Existing content...
+
+# Ignore all .conf files
+*.conf
+
+# Ignore Firebase Admin SDK JSON file
+just-db71c-firebase-adminsdk-1et5v-6c3043f20f.json
+
+# Existing content...
+
 build/tmp
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/

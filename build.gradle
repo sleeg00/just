@@ -106,6 +106,10 @@ dependencies {
 
 	//redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	//Cache
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	//FireBase
+	implementation group: 'com.google.firebase', name: 'firebase-admin', version: '8.1.0'
 }
 tasks.named('test') {
 	useJUnitPlatform()
