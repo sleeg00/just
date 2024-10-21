@@ -45,6 +45,9 @@
       @Column(name = "refresh_token")
       private String refreshToken;
 
+      @Column(name = "token")
+      private String token;
+
       @Builder.Default //안 써도 되는데 경고떠서 그냥 부침
       @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE,fetch = FetchType.LAZY,  orphanRemoval=true)
       // FetchType.EAGER -> FetchType.LAZY, EntityGraph를 통해 FetchType을 정할 것이다.
@@ -93,6 +96,7 @@
           this.likedPosts = member.getLikedPosts();
           this.notifications = member.getNotifications();
       }
+
   }
 
 
