@@ -36,6 +36,13 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
 
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+            fetch-depth: 0 # 모든 커밋을 가져옵니다
+
+
+
       - name: Copy Secret
         env:
           OCCUPY_SECRET: ${{ secrets.OCCUPY_SECRET }}

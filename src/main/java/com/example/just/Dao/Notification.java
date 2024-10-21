@@ -16,8 +16,8 @@ import java.util.List;
 @Table(name = "notification")
 @Builder
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class Notification implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,5 +45,14 @@ public class Notification implements Serializable {
     @Column(name = "not_sender_id")   //송신자 id
     private Long senderId;
 
-
+    public Notification(String notType, Long notPostId, Date notDatetime, Boolean notIsRead,
+                        Member receiver,
+                        Long senderId) {
+        this.notType = notType;
+        this.notPostId = notPostId;
+        this.notDatetime = notDatetime;
+        this.notIsRead = notIsRead;
+        this.receiver = receiver;
+        this.senderId = senderId;
+    }
 }
