@@ -68,7 +68,7 @@ services:
     container_name: my-redis
     image: redis:latest
     ports:
-      - "6379:6379"  # 호스트와 컨테이너의 포트 매핑
+      - 6379:6379  # 호스트와 컨테이너의 포트 매핑
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf  # Redis 설정 파일
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]  # 설정 파일 사용
