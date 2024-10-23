@@ -1,7 +1,8 @@
 package com.example.just.Service;
 
-import com.example.just.Dao.Member;
+
 import com.example.just.Redis.Fcm;
+
 import com.example.just.Repository.MemberRepository;
 import com.example.just.Repository.NotificationRepository;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -10,35 +11,44 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.Notification;
 import java.util.Date;
-import java.util.Optional;
-import javax.transaction.Transactional;
-import org.hibernate.annotations.Cache;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 
 @Service
 public class FCMService {
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate; // RedisTemplate 주입
+
     @Autowired
     MemberRepository memberRepository;
     @Autowired
     NotificationRepository notificationRepository;
 
-    @CachePut(cacheNames = "token", key = "#member_id")
-    public String setToken(Long member_id, String token) throws Exception {
+
+    @CachePut(cacheNames = "token", key = "#memberId", cacheManager = "contentCacheManager")
+    public String setToken(int memberId, String token) throws Exception {
         // 해당 아이디 가진 유저가 존재하는지 검사
         Fcm fcm = new Fcm();
-        fcm.setMember_id(member_id);
+        fcm.setMemberId(memberId);
         fcm.setToken(token);
-
-        return "토큰이 성공적으로 저장되었습니다";
+        String cache = getToken(memberId);
+        System.out.println(cache);
+       // setToken(1, "fedGDsuzTfuGs5_lPExj3I:APA91bF5aiAvLGKc25p_EzlbGY4YDXFxRwOQaakC4Wl8wSSl2eBiGleCRuLZpbpzkgFf5drTNjFRScMQznhdcXTEgGoRyGQJaLb28jrz2CMhyDVQfS31ac3mCPo6j-bmoIrC_5vwpDJn");
+        return token;
     }
 
-    @Transactional
-    @Cacheable(value = "token", key = "#member_Id")
-    public String sendMessage(String token, String title, String body) {
+
+    public String sendMessage(String title, String body) throws Exception {
+
+        String token = getToken(1);
 
         Notification notification2 = Notification.builder()
                 .setTitle(title)
@@ -70,6 +80,11 @@ public class FCMService {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    @Cacheable(value = "token", key = "#memberId" ,cacheManager = "contentCacheManager")
+    public String getToken(int memberId) {
+        return redisTemplate.opsForValue().get("token::" + memberId); // Redis에서 값을 가져옴
     }
 }
 
