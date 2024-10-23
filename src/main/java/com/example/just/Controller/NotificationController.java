@@ -42,7 +42,7 @@ public class NotificationController {
 
     }
     @PostMapping("/{id}/token")
-    public String getToken(@PathVariable Long id){
+    public String getToken(@PathVariable int id){
         try {
             return fcmService.setToken(id, "fedGDsuzTfuGs5_lPExj3I:APA91bF5aiAvLGKc25p_EzlbGY4YDXFxRwOQaakC4Wl8wSSl2eBiGleCRuLZpbpzkgFf5drTNjFRScMQznhdcXTEgGoRyGQJaLb28jrz2CMhyDVQfS31ac3mCPo6j-bmoIrC_5vwpDJn");
         } catch (Exception e) {
@@ -53,11 +53,11 @@ public class NotificationController {
     @PostMapping("/{id}/send")
     public String sendToken(@PathVariable Long id) {
         try {
-            String token = memberRepository.findById(id).get().getToken();
+
 
             String body = "what";
             String title = "hi";
-            fcmService.sendMessage(token, title, body);
+            fcmService.sendMessage(title, body);
         } catch (Exception e) {
             e.printStackTrace(); // 예외 로그 출력
             return "0";

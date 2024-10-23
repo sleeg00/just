@@ -12,6 +12,10 @@ import lombok.Setter;
 @Setter
 public class Fcm {
     @Id
-    public Long member_id;
+    public int memberId;
     public String token;
+
+    public Fcm() {
+
+    }
 }
