@@ -96,6 +96,7 @@ services:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]  # 설정 파일 사용
     networks:
       - elk
+  # 프로메테우스 설정
   prometheus:
     image: prom/prometheus:v2.24.0
     volumes:
@@ -109,6 +110,14 @@ services:
     ports:
       - 9090:9090
     restart: always
+    # RDS_Exporter 설정
+  rds_exporter:
+    container_name: rds_exporter
+    image: rds_exporter:latest
+    ports:
+      - 9042:9042
+    volumes:
+      - ./rds_exporter/config.yml:/etc/rds_exporter/config.yml
 volumes:
   grafana:
   prometheus_data:
