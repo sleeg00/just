@@ -1,6 +1,7 @@
 package com.example.just.Service;
 
 
+import com.example.just.Dao.Member;
 import com.example.just.Redis.Fcm;
 
 import com.example.just.Repository.MemberRepository;
@@ -13,6 +14,7 @@ import com.google.firebase.messaging.Notification;
 import java.util.Date;
 
 
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.cache.annotation.CachePut;
@@ -40,15 +42,15 @@ public class FCMService {
         fcm.setMemberId(memberId);
         fcm.setToken(token);
         String cache = getToken(memberId);
-        System.out.println(cache);
-       // setToken(1, "fedGDsuzTfuGs5_lPExj3I:APA91bF5aiAvLGKc25p_EzlbGY4YDXFxRwOQaakC4Wl8wSSl2eBiGleCRuLZpbpzkgFf5drTNjFRScMQznhdcXTEgGoRyGQJaLb28jrz2CMhyDVQfS31ac3mCPo6j-bmoIrC_5vwpDJn");
+
         return token;
     }
 
 
     public String sendMessage(String title, String body) throws Exception {
 
-        String token = getToken(1);
+       Optional<Member> member = memberRepository.findById(1L);
+       String token = member.get().getToken();
 
         Notification notification2 = Notification.builder()
                 .setTitle(title)
@@ -84,7 +86,12 @@ public class FCMService {
 
     @Cacheable(value = "token", key = "#memberId" ,cacheManager = "contentCacheManager")
     public String getToken(int memberId) {
-        return redisTemplate.opsForValue().get("token::" + memberId); // Redis에서 값을 가져옴
+        String token = redisTemplate.opsForValue().get("token::" + memberId);
+        if(token==null) { // missing cache
+            Optional<Member> member = memberRepository.findById((long) memberId);
+            return member.get().getToken();
+        }
+        return token;
     }
 }
 
