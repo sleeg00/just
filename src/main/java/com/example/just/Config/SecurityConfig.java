@@ -21,7 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Autowired private KakaoService kakaoService;
+    @Autowired
+    private KakaoService kakaoService;
     @Autowired
     private final JwtProvider jwtProvider;
     @Autowired
