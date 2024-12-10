@@ -37,9 +37,7 @@ public class NotificationController {
     @GetMapping(value = "/noti", produces = "text/event-stream")
     @ResponseStatus(HttpStatus.OK)
     public SseEmitter subscribe(HttpServletRequest request, @RequestHeader(value = "Last_Event-ID",required = false,defaultValue = "") String lastEventId){
-
         return notificationService.subscribe(request,lastEventId);
-
     }
     @PostMapping("/{id}/token")
     public String getToken(@PathVariable int id){
@@ -53,8 +51,6 @@ public class NotificationController {
     @PostMapping("/{id}/send")
     public String sendToken(@PathVariable Long id) {
         try {
-
-
             String body = "what";
             String title = "hi";
             fcmService.sendMessage(title, body);
