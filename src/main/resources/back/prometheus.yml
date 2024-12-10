@@ -6,4 +6,4 @@ scrape_configs: # 작업 이릉 명시
     metrics_path: /metrics
     static_configs:
       - targets:
-          - "host.docker.internal:9100"
+          - "13.209.204.40:9100"
