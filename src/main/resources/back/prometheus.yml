@@ -1,8 +1,8 @@
 global: # Metric 정보 수집 주기
-  scrape_interval: 5s
 
 scrape_configs:
   - job_name: "ec2 server"
+    scrape_interval: 30s
     metrics_path: /metrics
     static_configs:
       - targets:
