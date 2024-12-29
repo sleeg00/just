@@ -6,14 +6,6 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets:
-          - "13.209.204.40:9100"
+          - "3.38.113.85:9100"
 
-  - job_name: "RDS Exporter Basic"
-    scrape_interval: 60s
-    scrape_timeout: 55s
-    metrics_path: /basic  # 이 경로가 실제로 유효한지 확인 필요
-    honor_labels: true
-    honor_timestamps: false
-    static_configs:
-      - targets:
-          - "13.209.204.40:9042"
+

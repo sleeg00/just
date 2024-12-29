@@ -207,32 +207,36 @@ public class PostService {
         return postRepository.findAll();
     }
 
-    public ResponseGetPost searchByCursor(String cursor, Long limit, Long member_id) throws NotFoundException { //글 조
+    public ResponseGetPost searchByCursor(Long limit, Long member_id) throws NotFoundException { //글 조
         QPost post = QPost.post;
         QBlame blame = QBlame.blame;
         QHashTagMap hashTagMaps = QHashTagMap.hashTagMap;
         QHashTag hashTag = QHashTag.hashTag;
         Set<Long> viewedPostIds = new HashSet<>();
-        // 이전에 본 글들의 ID를 가져옵니다.
-        if (cursor != null) {
-            String[] viewedPostIdsArray = cursor.split(",");
-            viewedPostIds = new HashSet<>();
-            for (String viewedPostId : viewedPostIdsArray) {
-                viewedPostIds.add(Long.parseLong(viewedPostId.trim()));
-            }
-        }
-        JPAQuery<Post> postHashTagsQuery = query.select(post)
+
+
+        JPAQuery<Post> postQuery = query.select(post)
                 .from(post)
-                .leftJoin(post.hashTagMaps, hashTagMap).fetchJoin()
-                .leftJoin(hashTagMaps.hashTag, hashTag).fetchJoin()
                 .where(post.post_id.notIn(viewedPostIds),
-                        post.post_create_time.isNotNull(),
-                        hashTagMap.post.post_id.eq(post.post_id),
-                        hashTagMap.hashTag.id.eq(hashTag.id))
-                .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
+                        post.post_create_time.isNotNull())
+                .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())  // 랜덤 정렬
                 .limit(limit);
 
-        List<Post> postsWithHashTags = postHashTagsQuery.fetch();
+// hashTagMap과 Post를 먼저 조인
+        JPAQuery<Post> hashTagQuery = postQuery
+                .leftJoin(post.hashTagMaps, hashTagMap).fetchJoin()
+                .leftJoin(hashTagMap.hashTag, hashTag)  // hashTagMap과 hashTag를 조인
+                .where(hashTagMap.hashTag.id.eq(hashTag.id));  // ON 절로 조건을 설정
+
+        JPAQuery<Post> finalQuery = hashTagQuery
+                .distinct()  // 중복 결과 제거
+                .limit(limit);
+
+
+
+        List<Post> postsWithHashTags =finalQuery.fetch();
+
+
         List<Long> postIds = postsWithHashTags.stream()
                 .map(Post::getPost_id)
                 .collect(Collectors.toList());
