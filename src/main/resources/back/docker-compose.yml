@@ -40,8 +40,8 @@ services:
     # Elastic search 계정정보
     environment:
       discovery.type: single-node
-      xpack.security.enabled: 0 # SSL 미적용 추후 변경
-      xpack.security.transport.ssl.enabled: 0 # SSL 미적용 추후 변경
+      xpack.security.enabled: false # SSL 미적용 추후 변경
+      xpack.security.transport.ssl.enabled: false # SSL 미적용 추후 변경
       ELASTIC_USERNAME: "elastic"
       ELASTIC_PASSWORD: "elastic123!@#"
     networks:
@@ -84,13 +84,7 @@ services:
       - 9090:9090
     restart: always
     # RDS_Exporter 설정
-  rds_exporter:
-    container_name: rds_exporter
-    image: rds_exporter:latest
-    ports:
-      - 9042:9042
-    volumes:
-      - ./rds_exporter/config.yml:/etc/rds_exporter/config.yml
+
 volumes:
   grafana:
   prometheus_data:
