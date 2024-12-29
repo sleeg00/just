@@ -33,11 +33,10 @@ public class PostController {
             "랜덤하고 중복되지않게 viewed(이미 읽은 글)라는 헤더에 [1, 2, 3] <-set형식 을 프론트에서 넘겨줘야함" +
             " 백에서 넘겨주니까 로컬스토리지에 저장해놓고 넘겨주면 됨\n 자기 글이 조회되면  true")
     @GetMapping("/get/post")
-    public ResponseEntity<Object> getPosts(@RequestParam Long request_page,
-                                           HttpServletRequest req) throws NotFoundException {
-        String cursor = req.getHeader("viewed");
+    @Transactional(readOnly = true)
+    public ResponseEntity<Object> getPosts(@RequestParam Long request_page) throws NotFoundException {
         try {
-            return ResponseEntity.ok(postService.searchByCursor(cursor, request_page, -1L));
+            return ResponseEntity.ok(postService.searchByCursor( request_page, -1L));
         } catch (NotFoundException e) {
             return ResponseEntity.notFound().build();
         }
@@ -83,9 +82,8 @@ public class PostController {
             + "}"
             + "이런식으로 작성하면 됩니다.")
     @PostMapping("/post/post")
-    public PostPostDto write(HttpServletRequest request,
+    public PostPostDto write(@RequestParam Long member_id,
                              @RequestBody PostPostDto postDto) {
-        Long member_id = getAccessTokenOfMemberId(request);
         return postService.write(member_id, postDto);
     }
     @PostMapping("/test/post/post")
@@ -93,7 +91,6 @@ public class PostController {
                              @RequestParam Long member_id,
                              @RequestBody PostPostDto postDto) {
         Long memberid = getAccessTokenOfMemberId(request);
-        System.out.println(memberid);
         postService.write(member_id, postDto);
     }
     @Operation(summary = "게시글 삭제 api", description = "\n 글이 삭제되면 value : 삭제 완료"
