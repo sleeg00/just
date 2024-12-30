@@ -21,7 +21,7 @@ import java.util.List;
 //
 public class PostPostDto {
 
-    private PostContent post_content;
+    private String content;    //글 내용
 
     private List<String> hash_tag;    //글 태그
 

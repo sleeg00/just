@@ -111,12 +111,7 @@ public class PostService {
     public PostPostDto write(Long member_id, PostPostDto postDto) {    //글 작성
         Member member = checkMember(member_id);
         Post post = new Post();
-        //해시태그가 NULL일 경우 Gpt로 해시태그 생성
-        if (postDto.getHash_tag() == null) {
 
-        }
-
-        postDto.setPost_content(postDto.getPost_content());
         post.writePost(postDto, member);
         Post p = postRepository.save(post);
 
@@ -171,7 +166,6 @@ public class PostService {
 
         deleteHashTag(checkPost);
 
-
         postDto.setPost_content(postDto.getPost_content());
 
         checkPost.changePost(postDto, member, checkPost);
@@ -214,7 +208,6 @@ public class PostService {
         QHashTag hashTag = QHashTag.hashTag;
         Set<Long> viewedPostIds = new HashSet<>();
 
-
         JPAQuery<Post> postQuery = query.select(post)
                 .from(post)
                 .where(post.post_id.notIn(viewedPostIds),
@@ -222,22 +215,18 @@ public class PostService {
                 .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())  // 랜덤 정렬
                 .limit(limit);
 
-// hashTagMap과 Post를 먼저 조인
         JPAQuery<Post> hashTagQuery = postQuery
-                .leftJoin(post.hashTagMaps, hashTagMap).fetchJoin()
-                .leftJoin(hashTagMap.hashTag, hashTag)  // hashTagMap과 hashTag를 조인
-                .where(hashTagMap.hashTag.id.eq(hashTag.id));  // ON 절로 조건을 설정
+                .select(post)
+                .from(post)
+                .leftJoin(post.hashTagMaps, hashTagMaps)
+                .leftJoin(hashTagMaps.hashTag, hashTag);
 
         JPAQuery<Post> finalQuery = hashTagQuery
                 .distinct()  // 중복 결과 제거
                 .limit(limit);
 
-
-
-        List<Post> postsWithHashTags =finalQuery.fetch();
-
-
-        List<Long> postIds = postsWithHashTags.stream()
+        List<Post> postsWithHashTags2 = finalQuery.fetch();
+        List<Long> postIds = postsWithHashTags2.stream()
                 .map(Post::getPost_id)
                 .collect(Collectors.toList());
 
@@ -248,7 +237,7 @@ public class PostService {
                         comment.post.post_id.in(postIds));
 
         List<Post> postsWithComments = postCommentsQuery.fetch();
-        Map<Long, Post> postMap = postsWithHashTags.stream()
+        Map<Long, Post> postMap = postsWithHashTags2.stream()
                 .collect(Collectors.toMap(Post::getPost_id, Function.identity()));
         int i = 0;
         for (Post postMapValue : postMap.values()) {
@@ -294,14 +283,14 @@ public class PostService {
             // ResponseGetMemberPostDto 생성 및 필드 세팅
             ResponseGetMemberPostDto responseGetMemberPostDto = new ResponseGetMemberPostDto();
             responseGetMemberPostDto.setPost_id(post.getPost_id());
-      //      responseGetMemberPostDto.setPost_content(post.getPostContent());
+            //      responseGetMemberPostDto.setPost_content(post.getPostContent());
             responseGetMemberPostDto.setPost_picture(post.getPost_picture());
             responseGetMemberPostDto.setHash_tag(hashTagNames);
             responseGetMemberPostDto.setPost_create_time(post.getPost_create_time());
             responseGetMemberPostDto.setBlamed_count(Math.toIntExact(post.getBlamedCount()));
             responseGetMemberPostDto.setSecret(post.getSecret());
             responseGetMemberPostDto.setPost_like_size(post.getPost_like());
-          //  responseGetMemberPostDto.setComment_size((long) post.getComments().size());
+            //  responseGetMemberPostDto.setComment_size((long) post.getComments().size());
 
             if (member_id != -1) {
                 responseGetMemberPostDto.setMine(post.getMember().getId().equals(member_id));
@@ -458,7 +447,7 @@ public class PostService {
         List<HashTagMap> hashTagMaps = hashTagMapRepository.findAllByPostIds(postIds);
 
         hashTagMaps.forEach(hashTagMap -> {
-            Post correspondingPost =  postMap.get((hashTagMap.getPost().getPost_id()));
+            Post correspondingPost = postMap.get((hashTagMap.getPost().getPost_id()));
             if (correspondingPost != null) {
                 correspondingPost.setHashTagMaps(Collections.singletonList(hashTagMap));
             }
