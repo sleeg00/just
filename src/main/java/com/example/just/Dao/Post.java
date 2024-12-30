@@ -76,9 +76,10 @@ public class Post {
         this.emoticon = this.emoticon == null ? "0" : this.emoticon;
     }
 
-    public void writePost(PostPostDto postDto, Member member) { // 글 쓰기 생성자
-
-        this.postContent = postDto.getPost_content();
+    public void writePost(PostPostDto postDto, Member member) {
+        PostContent postContent1 = new PostContent();
+        postContent1.setContent(postDto.getContent());
+        this.postContent = postContent1;
         this.post_picture = postDto.getPost_picture();
         this.secret = postDto.getSecret();
         this.emoticon = "";
