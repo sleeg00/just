@@ -206,6 +206,7 @@ public class PostService {
         QBlame blame = QBlame.blame;
         QHashTagMap hashTagMaps = QHashTagMap.hashTagMap;
         QHashTag hashTag = QHashTag.hashTag;
+        QPostContent postContent = QPostContent.postContent;
         Set<Long> viewedPostIds = new HashSet<>();
 
         JPAQuery<Post> postQuery = query.select(post)
@@ -215,38 +216,62 @@ public class PostService {
                 .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())  // 랜덤 정렬
                 .limit(limit);
 
-        JPAQuery<Post> hashTagQuery = postQuery
+        JPAQuery<Post> postContentQuery = postQuery
                 .select(post)
                 .from(post)
-                .leftJoin(post.hashTagMaps, hashTagMaps)
-                .leftJoin(hashTagMaps.hashTag, hashTag);
-
-        JPAQuery<Post> finalQuery = hashTagQuery
-                .distinct()  // 중복 결과 제거
-                .limit(limit);
-
-        List<Post> postsWithHashTags2 = finalQuery.fetch();
-        List<Long> postIds = postsWithHashTags2.stream()
+                .leftJoin(post.postContent, postContent)
+                .where(post.post_id.eq(postContent.post.post_id))
+                .fetchJoin();
+        List<Post> postsWithContent = postContentQuery.fetch();
+        List<Long> postIds = postsWithContent.stream()
                 .map(Post::getPost_id)
                 .collect(Collectors.toList());
+        JPAQuery<HashTagMap> hashTagQuery = query.select(hashTagMaps)
+                .select(hashTagMaps)
+                .from(hashTagMaps)
+                .where(hashTagMaps.post.post_id.in(postIds));
 
-        JPAQuery<Post> postCommentsQuery = query.select(post)
-                .from(post)
-                .leftJoin(post.comments, comment).fetchJoin()
-                .where(post.post_id.in(postIds),
-                        comment.post.post_id.in(postIds));
+        List<HashTagMap> hashTagMaps1 = hashTagQuery.fetch();
+        List<Post> postsWithHashTags2 = postsWithContent.stream()
+                .map(post3 -> {
+                    post3.setHashTagMaps(hashTagMaps1.stream()
+                            .filter(hashTagMap -> hashTagMap.getPost().getPost_id().equals(post3.getPost_id()))
+                            .collect(Collectors.toList()));
+                    return post3;
+                })
+                .collect(Collectors.toList());
+        List<Long> hash = hashTagMaps1.stream()
+                .map(hashTagMap -> hashTagMap.getHashTag().getId())
+                .collect(Collectors.toList());
+        JPAQuery<HashTag> finalQuery = query
+                .select(hashTag)
+                .from(hashTag)
+                .where(hashTag.id.in(hash));
 
-        List<Post> postsWithComments = postCommentsQuery.fetch();
-        Map<Long, Post> postMap = postsWithHashTags2.stream()
-                .collect(Collectors.toMap(Post::getPost_id, Function.identity()));
-        int i = 0;
-        for (Post postMapValue : postMap.values()) {
-            if (postsWithComments.size() == 0) {
-                postMapValue.setComments(Collections.emptyList());
-            } else {
-                postMapValue.setComments(postsWithComments.get(i++).getComments());
+        List<HashTag> hashTags = finalQuery.fetch();
+        postsWithHashTags2.forEach(post4 -> {
+            post4.getHashTagMaps().forEach(hashTagMap -> {
+                hashTags.forEach(hashTag1 -> {
+                    if (hashTagMap.getHashTag().getId().equals(hashTag1.getId())) {
+                        hashTagMap.setHashTag(hashTag1);
+                    }
+                });
+            });
+        });
+        for (int i = 0; i < postsWithHashTags2.size(); i++) {
+            for (int j = 0; j < postsWithHashTags2.get(i).getHashTagMaps().size(); j++) {
+                for (int k = 0; k < hashTags.size(); k++) {
+                    if (postsWithHashTags2.get(i).getHashTagMaps().get(j).getHashTag().getId() == hashTags.get(k)
+                            .getId()) {
+                        postsWithHashTags2.get(i).getHashTagMaps().get(j).setHashTag(hashTags.get(k));
+                    }
+                }
             }
         }
+
+
+        Map<Long, Post> postMap = postsWithHashTags2.stream()
+                .collect(Collectors.toMap(Post::getPost_id, Function.identity()));
 
         List<Post> results = new ArrayList<>(postMap.values());
 
