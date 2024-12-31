@@ -77,14 +77,14 @@ public class RoutingDataSourceConfig {
     private Properties hibernateProperties() {
         Properties properties = new Properties();
         properties.setProperty("hibernate.hbm2ddl.auto", "validate");
-        properties.setProperty("hibernate.format_sql", "true");
+        properties.setProperty("hibernate.format_sql", "false");
         return properties;
     }
 
     private JpaVendorAdapter jpaVendorAdapter() {
         HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
         adapter.setGenerateDdl(false);
-        adapter.setShowSql(false);
+        adapter.setShowSql(true);
 
         adapter.setDatabasePlatform(HIBERNATE_DIALECT);
 
