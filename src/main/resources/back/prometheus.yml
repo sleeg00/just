@@ -7,5 +7,12 @@ scrape_configs:
     static_configs:
       - targets:
           - "3.38.113.85:9000"
-
-
+  - job_name: RDS Exporter Basic
+    scrape_interval: 60s
+    scrape_timeout: 55s
+    metrics_path: /basic
+    honor_labels: true
+    honor_timestamps: false
+    scheme: "http"
+    static_configs:
+      - targets: ["3.38.113.85:9042"]
