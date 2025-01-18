@@ -95,7 +95,13 @@ services:
       - 9090:9090
     restart: always
     # RDS_Exporter 설정
-
+  rds_exporter:
+    container_name: rds_exporter
+    image: rds_exporter:latest
+    ports:
+      - 9042:9042
+    volumes:
+      - ./rds_exporter/config.yml:/etc/rds_exporter/config.yml
 volumes:
   grafana:
   prometheus_data:
