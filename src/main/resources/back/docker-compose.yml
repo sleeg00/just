@@ -95,13 +95,15 @@ services:
       - 9090:9090
     restart: always
     # RDS_Exporter 설정
-  rds_exporter:
-    container_name: rds_exporter
-    image: rds_exporter:latest
-    ports:
-      - 9042:9042
+  mysqld_exporter:
+    image: prom/mysqld-exporter:v0.14.0
+    container_name: mysqld_exporter
     volumes:
-      - ./rds_exporter/config.yml:/etc/rds_exporter/config.yml
+      - ./mysql_exporter.cnf:/etc/my.cnf # 여기서 my.cnf 파일을 참조
+    ports:
+      - "9104:9104"
+    depends_on:
+      - prometheus
 volumes:
   grafana:
   prometheus_data:
