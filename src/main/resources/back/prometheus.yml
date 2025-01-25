@@ -7,10 +7,8 @@ scrape_configs:
     static_configs:
       - targets:
           - "3.38.113.85:9000"
-
   - job_name: "mysql"
     scrape_interval: 60s
-    metrics_path: /mysql
     static_configs:
       - targets:
           - "3.38.113.85:9104"
