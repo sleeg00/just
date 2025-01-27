@@ -90,6 +90,8 @@ public class PostService {
         this.query = new JPAQueryFactory(em);
     }
 
+
+    @Transactional(readOnly = true)
     private Member checkMember(Long member_id) {
         Optional<Member> optionalMember = memberRepository.findById(member_id);
         if (!optionalMember.isPresent()) {  //아이디 없을시 예외처리
@@ -108,6 +110,7 @@ public class PostService {
         return post;
     }
 
+    @Transactional(readOnly = false)
     public PostPostDto write(Long member_id, PostPostDto postDto) {    //글 작성
         Member member = checkMember(member_id);
         Post post = new Post();
