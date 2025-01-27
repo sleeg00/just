@@ -84,7 +84,7 @@ public class RoutingDataSourceConfig {
     private JpaVendorAdapter jpaVendorAdapter() {
         HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
         adapter.setGenerateDdl(false);
-        adapter.setShowSql(true);
+        adapter.setShowSql(false);
 
         adapter.setDatabasePlatform(HIBERNATE_DIALECT);
 
