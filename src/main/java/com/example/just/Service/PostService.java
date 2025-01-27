@@ -3,7 +3,6 @@ package com.example.just.Service;
 
 import static com.example.just.Dao.QComment.comment;
 import static com.example.just.Dao.QHashTagMap.hashTagMap;
-import static com.example.just.Dao.QPostContent.postContent;
 
 
 import com.example.just.Dao.HashTag;
@@ -19,7 +18,6 @@ import com.example.just.Dao.QPost;
 import com.example.just.Dao.QPostContent;
 import com.example.just.Document.HashTagDocument;
 import com.example.just.Document.PostDocument;
-import com.example.just.Dto.GptRequestDto;
 import com.example.just.Dto.PostPostDto;
 import com.example.just.Dto.PutPostDto;
 import com.example.just.Repository.BlameRepository;
@@ -128,7 +126,7 @@ public class PostService {
 
     private void saveHashTag(List<String> hashTags, Post p) {
         for (int i = 0; i < hashTags.size(); i++) {
-            HashTag hashTag = hashTagRepository.findByName(hashTags.get(i));
+            HashTag hashTag = findTag(hashTags,i);
             HashTagMap hashTagMap = new HashTagMap();
             if (hashTag == null) {
                 HashTag newHashTag = new HashTag(hashTags.get(i));
@@ -144,6 +142,10 @@ public class PostService {
             }
             hashTagMapRepository.save(hashTagMap);
         }
+    }
+    @Transactional(readOnly = true)
+    private HashTag findTag(List<String> hashTags, int i) {
+       return hashTagRepository.findByName(hashTags.get(i));
     }
 
 
