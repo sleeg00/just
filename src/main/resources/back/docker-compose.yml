@@ -105,10 +105,10 @@ services:
       - "--mysqld.address=${MYSQL_HOST}:${MYSQL_PORT}"
     ports:
       - 9104:9104
-      -
+
   mysqld-read-exporter:
     image: quay.io/prometheus/mysqld-exporter
-    container_name: mysqld-exporter
+    container_name: mysqld-exporter2
     restart: unless-stopped
     command:
       - "--mysqld.username=${MYSQL_USER}:${MYSQL_PASSWORD}"
