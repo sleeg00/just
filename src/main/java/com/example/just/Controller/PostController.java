@@ -84,6 +84,7 @@ public class PostController {
     @PostMapping("/post/post")
     public PostPostDto write(@RequestParam Long member_id,
                              @RequestBody PostPostDto postDto) {
+
         return postService.write(member_id, postDto);
     }
     @PostMapping("/test/post/post")

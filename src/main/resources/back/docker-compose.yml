@@ -105,6 +105,25 @@ services:
       - "--mysqld.address=${MYSQL_HOST}:${MYSQL_PORT}"
     ports:
       - 9104:9104
+
+  ngrinder-controller:
+    image: ngrinder/controller
+    container_name: controller
+    ports:
+      - "8300:80"
+      - "16001:16001"
+      - "12000-12009:12000-12009"
+    volumes:
+      - ~/ngrinder-controller:/opt/ngrinder-controller
+    restart: unless-stopped
+
+  ngrinder-agent:
+    image: ngrinder/agent
+    container_name: agent
+    links:
+      - controller:controller
+    restart: unless-stopped
+
 volumes:
   grafana:
   prometheus_data:
