@@ -105,24 +105,18 @@ services:
       - "--mysqld.address=${MYSQL_HOST}:${MYSQL_PORT}"
     ports:
       - 9104:9104
-
-  ngrinder-controller:
-    image: ngrinder/controller
-    container_name: controller
+      -
+  mysqld-read-exporter:
+    image: quay.io/prometheus/mysqld-exporter
+    container_name: mysqld-exporter
+    restart: unless-stopped
+    command:
+      - "--mysqld.username=${MYSQL_USER}:${MYSQL_PASSWORD}"
+      - "--mysqld.address=${MYSQL_READ_HOST}:${MYSQL_PORT}"
     ports:
-      - "8300:80"
-      - "16001:16001"
-      - "12000-12009:12000-12009"
-    volumes:
-      - ~/ngrinder-controller:/opt/ngrinder-controller
-    restart: unless-stopped
+      - 9105:9105
 
-  ngrinder-agent:
-    image: ngrinder/agent
-    container_name: agent
-    links:
-      - controller:controller
-    restart: unless-stopped
+
 
 volumes:
   grafana:
