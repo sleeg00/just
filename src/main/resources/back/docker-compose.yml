@@ -51,8 +51,8 @@ services:
     # Elastic search 계정정보
     environment:
       discovery.type: single-node
-      xpack.security.enabled: false # SSL 미적용 추후 변경
-      xpack.security.transport.ssl.enabled: false # SSL 미적용 추후 변경
+      xpack.security.enabled: "false" # SSL 미적용 추후 변경
+      xpack.security.transport.ssl.enabled: "false" # SSL 미적용 추후 변경
       ELASTIC_USERNAME: "elastic"
       ELASTIC_PASSWORD: "elastic123!@#"
     networks:
