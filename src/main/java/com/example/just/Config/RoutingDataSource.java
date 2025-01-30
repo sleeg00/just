@@ -10,8 +10,10 @@ public class RoutingDataSource extends AbstractRoutingDataSource {
     @Override
     protected Object determineCurrentLookupKey() {
         if (TransactionSynchronizationManager.isCurrentTransactionReadOnly()) {
+
             return DataSourceType.SLAVE;
         }
+
         return DataSourceType.MASTER;
     }
 
