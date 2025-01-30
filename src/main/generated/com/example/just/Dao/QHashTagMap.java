@@ -24,8 +24,6 @@ public class QHashTagMap extends EntityPathBase<HashTagMap> {
 
     public final QHashTag hashTag;
 
-    public final NumberPath<Long> id = createNumber("id", Long.class);
-
     public final QPost post;
 
     public QHashTagMap(String variable) {
