@@ -80,6 +80,9 @@ public class Post {
         PostContent postContent1 = new PostContent();
         postContent1.setContent(postDto.getContent());
         this.postContent = postContent1;
+
+        // postContent 객체에 post를 설정
+        postContent1.setPost(this);
         this.post_picture = postDto.getPost_picture();
         this.secret = postDto.getSecret();
         this.emoticon = "";
