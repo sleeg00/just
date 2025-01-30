@@ -50,6 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 
 @Service
@@ -89,8 +90,9 @@ public class PostService {
     }
 
 
-    @Transactional(readOnly = true)
-    private Member checkMember(Long member_id) {
+   // @Transactional(readOnly = true)
+    public Member checkMember(Long member_id) {
+       // System.out.println("Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
         Optional<Member> optionalMember = memberRepository.findById(member_id);
         if (!optionalMember.isPresent()) {  //아이디 없을시 예외처리
             throw new NoSuchElementException("DB에 존재하지 않는 ID : " + member_id);
@@ -109,8 +111,8 @@ public class PostService {
     }
 
     @Transactional(readOnly = false)
-    public PostPostDto write(Long member_id, PostPostDto postDto) {    //글 작성
-        Member member = checkMember(member_id);
+    public PostPostDto write(Member member, PostPostDto postDto) {    //글 작성
+       // System.out.println("Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
         Post post = new Post();
 
         post.writePost(postDto, member);
@@ -124,7 +126,7 @@ public class PostService {
         return postDto;
     }
 
-    private void saveHashTag(List<String> hashTags, Post p) {
+    private void saveHashTag(List<String> hashTags, Post p) { // Redis
         for (int i = 0; i < hashTags.size(); i++) {
             HashTag hashTag = findTag(hashTags,i);
             HashTagMap hashTagMap = new HashTagMap();
@@ -143,7 +145,7 @@ public class PostService {
             hashTagMapRepository.save(hashTagMap);
         }
     }
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = false)
     private HashTag findTag(List<String> hashTags, int i) {
        return hashTagRepository.findByName(hashTags.get(i));
     }
@@ -216,8 +218,6 @@ public class PostService {
 
         JPAQuery<Post> postQuery = query.select(post)
                 .from(post)
-                .where(post.post_id.notIn(viewedPostIds),
-                        post.post_create_time.isNotNull())
                 .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())  // 랜덤 정렬
                 .limit(limit);
 

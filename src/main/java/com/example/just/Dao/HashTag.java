@@ -10,12 +10,15 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
@@ -25,13 +28,19 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@Table(
+        name = "HashTag",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_name", columnNames = "name")
+        }
+)
 public class HashTag {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="hash_tag_id")
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false, unique = true)
     private String name;
 
     @Column(name = "tag_count")
