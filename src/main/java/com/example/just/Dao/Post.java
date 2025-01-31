@@ -56,7 +56,7 @@ public class Post {
     @Builder.Default
     private List<Member> likedMembers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     private List<HashTagMap> hashTagMaps = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY) // 원하지 않는 데이터를 가져오지 않기 위해 LAZY로 설정
