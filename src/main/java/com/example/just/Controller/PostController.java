@@ -8,6 +8,7 @@ import com.example.just.jwt.JwtProvider;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.Operation;
+import java.sql.SQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
@@ -34,16 +35,19 @@ public class PostController {
             "랜덤하고 중복되지않게 viewed(이미 읽은 글)라는 헤더에 [1, 2, 3] <-set형식 을 프론트에서 넘겨줘야함" +
             " 백에서 넘겨주니까 로컬스토리지에 저장해놓고 넘겨주면 됨\n 자기 글이 조회되면  true")
     @GetMapping("/get/post")
-    @Transactional(readOnly = false)
+    @Transactional(readOnly = true)
     public ResponseEntity<Object> getPosts(@RequestParam Long request_page) throws NotFoundException {
         try {
             return ResponseEntity.ok(postService.searchByCursor( request_page, -1L));
-        } catch (NotFoundException e) {
+        } catch (NotFoundException | SQLException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-
+    @GetMapping("/redis")
+    public void redis() throws NotFoundException {
+        postService.saveAllHashTagsToRedis();
+    }
     @Operation(summary = "자기의 게시글을 조회하는 API", description = "<big> 자신의 게시글을 조회한다</big>")
     @GetMapping("/get/mypost")
     public ResponseEntity<Object> getMyPosts(HttpServletRequest request) throws NotFoundException {
