@@ -46,7 +46,7 @@ public class HashTag {
     @Column(name = "tag_count")
     private Long tagCount;
 
-    @OneToMany(mappedBy = "hashTag", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "hashTag", fetch = FetchType.LAZY)
     private List<HashTagMap> hashTagMaps = new ArrayList<>();
 
 
@@ -55,6 +55,12 @@ public class HashTag {
 
     public HashTag(String name) {
         this.name = name;
+    }
+
+    public HashTag(Long hashTagId, String name, Long tagCount) {
+        this.id= hashTagId;
+        this.name = name;
+        this.tagCount = tagCount;
     }
 
     public void addHashTagMap(HashTagMap hashTagMap) {
