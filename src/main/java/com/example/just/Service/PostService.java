@@ -2,6 +2,7 @@ package com.example.just.Service;
 
 
 import static com.example.just.Dao.QComment.comment;
+import static com.example.just.Dao.QHashTag.hashTag;
 import static com.example.just.Dao.QHashTagMap.hashTagMap;
 
 
@@ -38,12 +39,18 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.function.Function;
+import javax.persistence.PersistenceContext;
+import javax.sql.DataSource;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,8 +62,11 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 @Service
 public class PostService {
+    @Autowired
+    private DataSource dataSource;
     private final EntityManager em;
-
+    @PersistenceContext
+    private EntityManager entityManager;
     private final JPAQueryFactory query;
     @Autowired
     private PostRepository postRepository;
@@ -84,15 +94,20 @@ public class PostService {
     @Autowired
     private HashTagMapRepository hashTagMapRepository;
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    private static final String redisKey = "hashTag::";  // Redis Key Prefix
+
     public PostService(EntityManager em, JPAQueryFactory query) {
         this.em = em;
         this.query = new JPAQueryFactory(em);
     }
 
 
-   // @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public Member checkMember(Long member_id) {
-       // System.out.println("Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+         System.out.println("Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
         Optional<Member> optionalMember = memberRepository.findById(member_id);
         if (!optionalMember.isPresent()) {  //아이디 없을시 예외처리
             throw new NoSuchElementException("DB에 존재하지 않는 ID : " + member_id);
@@ -112,7 +127,7 @@ public class PostService {
 
     @Transactional(readOnly = false)
     public PostPostDto write(Member member, PostPostDto postDto) {    //글 작성
-       // System.out.println("Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+        // System.out.println("Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
         Post post = new Post();
 
         post.writePost(postDto, member);
@@ -128,7 +143,7 @@ public class PostService {
 
     private void saveHashTag(List<String> hashTags, Post p) { // Redis
         for (int i = 0; i < hashTags.size(); i++) {
-            HashTag hashTag = findTag(hashTags,i);
+            HashTag hashTag = findTag(hashTags, i);
             HashTagMap hashTagMap = new HashTagMap();
             if (hashTag == null) {
                 HashTag newHashTag = new HashTag(hashTags.get(i));
@@ -145,9 +160,10 @@ public class PostService {
             hashTagMapRepository.save(hashTagMap);
         }
     }
+
     @Transactional(readOnly = false)
     private HashTag findTag(List<String> hashTags, int i) {
-       return hashTagRepository.findByName(hashTags.get(i));
+        return hashTagRepository.findByName(hashTags.get(i));
     }
 
 
@@ -208,11 +224,12 @@ public class PostService {
         return postRepository.findAll();
     }
 
-    public ResponseGetPost searchByCursor(Long limit, Long member_id) throws NotFoundException { //글 조
+
+
+    public ResponseGetPost searchByCursor(Long limit, Long member_id) throws NotFoundException, SQLException { //글 조
+
         QPost post = QPost.post;
-        QBlame blame = QBlame.blame;
         QHashTagMap hashTagMaps = QHashTagMap.hashTagMap;
-        QHashTag hashTag = QHashTag.hashTag;
         QPostContent postContent = QPostContent.postContent;
         Set<Long> viewedPostIds = new HashSet<>();
 
@@ -227,10 +244,13 @@ public class PostService {
                 .leftJoin(post.postContent, postContent)
                 .where(post.post_id.eq(postContent.post.post_id))
                 .fetchJoin();
+
         List<Post> postsWithContent = postContentQuery.fetch();
+
         List<Long> postIds = postsWithContent.stream()
                 .map(Post::getPost_id)
                 .collect(Collectors.toList());
+
         JPAQuery<HashTagMap> hashTagQuery = query.select(hashTagMaps)
                 .select(hashTagMaps)
                 .from(hashTagMaps)
@@ -245,82 +265,88 @@ public class PostService {
                     return post3;
                 })
                 .collect(Collectors.toList());
+
         List<Long> hash = hashTagMaps1.stream()
                 .map(hashTagMap -> hashTagMap.getHashTag().getId())
                 .collect(Collectors.toList());
-        JPAQuery<HashTag> finalQuery = query
-                .select(hashTag)
-                .from(hashTag)
-                .where(hashTag.id.in(hash));
 
-        List<HashTag> hashTags = finalQuery.fetch();
-        postsWithHashTags2.forEach(post4 -> {
-            post4.getHashTagMaps().forEach(hashTagMap -> {
-                hashTags.forEach(hashTag1 -> {
-                    if (hashTagMap.getHashTag().getId().equals(hashTag1.getId())) {
-                        hashTagMap.setHashTag(hashTag1);
-                    }
-                });
-            });
-        });
-        for (int i = 0; i < postsWithHashTags2.size(); i++) {
-            for (int j = 0; j < postsWithHashTags2.get(i).getHashTagMaps().size(); j++) {
-                for (int k = 0; k < hashTags.size(); k++) {
-                    if (postsWithHashTags2.get(i).getHashTagMaps().get(j).getHashTag().getId() == hashTags.get(k)
-                            .getId()) {
-                        postsWithHashTags2.get(i).getHashTagMaps().get(j).setHashTag(hashTags.get(k));
-                    }
-                }
-            }
-        }
+
+
+        List<String> hashTagNames = getRedisHashTags(hash);
 
 
         Map<Long, Post> postMap = postsWithHashTags2.stream()
                 .collect(Collectors.toMap(Post::getPost_id, Function.identity()));
 
         List<Post> results = new ArrayList<>(postMap.values());
-
+        //System.out.println("Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
         if (results.size() == 0) {
             throw new NotFoundException();
         } else {
-            List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(results, member_id);
+            List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(results, hashTagNames, member_id);
             return resultPostIds(viewedPostIds, results, getPostDtos);
         }
     }
 
+
+    @Cacheable(cacheNames = "hashTag", key = "#hash_ids")
+    public List<String> getRedisHashTags(List<Long> hash_ids) {
+        List<Long> cachedHashTags = new ArrayList<>();
+        List<String> hashTagNames = new ArrayList<>();
+        // 캐시에서 데이터를 찾고 찾은 데이터를 리스트에 추가
+        for (Long hashTagId : hash_ids) {
+            String redisKey2 = "hashTag::" + hashTagId;  // Redis에서 사용하는 Key
+
+            // Redis에서 Hash 값을 조회
+            Map<Object, Object> cachedData = redisTemplate.opsForHash().entries(redisKey2);
+
+            if (!cachedData.isEmpty()) {
+                String name = (String) cachedData.get("name");  // "name" 필드 값 조회
+
+                hashTagNames.add(name);
+                cachedHashTags.add(hashTagId);
+            }
+        }
+
+        // 캐시에서 조회되지 않은 hashTagId들 DB에서 조회하여 처리
+        List<Long> missingHashIds = new ArrayList<>(hash_ids);
+
+        for (Long id : cachedHashTags) {
+            missingHashIds.remove(id);  // 캐시에서 찾은 hashTagId 제거
+        }
+
+
+        return hashTagNames;
+    }
+
+
+
     private ResponseGetPost resultPostIds(Set<Long> viewedPostIds, List<Post> results,
                                           List<ResponseGetMemberPostDto> getPostDtos) {
-        int resultPostIds = 1;
-        long allPosts = postRepository.countAllPosts();
-        // hasNext와 nextCursor를 계산합니다.
-        boolean hasNext = viewedPostIds.size() < allPosts;
+
+        boolean hasNext = true;
         // Slice 객체를 생성해서 반환합니다.
         ResponseGetPost responseGetPost = new ResponseGetPost(
                 getPostDtos, hasNext);
         return responseGetPost;
     }
 
-    private List<ResponseGetMemberPostDto> createResponseGetMemberPostDto(List<Post> results, Long member_id) {
+    private List<ResponseGetMemberPostDto> createResponseGetMemberPostDto(List<Post> results, List<String> hashTagNames,
+                                                                          Long member_id) {
         List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
 
         for (Post post : results) {
-            // Post에서 직접적으로 데이터를 가져와야 함
-            List<HashTagMap> hashTagMaps = post.getHashTagMaps();
-            // 해시태그 이름 추출
-            List<String> hashTagNames = hashTagMaps.stream()
-                    .map(hashTagMap -> hashTagMap.getHashTag().getName())
-                    .collect(Collectors.toList());
+
             // ResponseGetMemberPostDto 생성 및 필드 세팅
             ResponseGetMemberPostDto responseGetMemberPostDto = new ResponseGetMemberPostDto();
             responseGetMemberPostDto.setPost_id(post.getPost_id());
-            //      responseGetMemberPostDto.setPost_content(post.getPostContent());
+            responseGetMemberPostDto.setPost_content(post.getPostContent());
             responseGetMemberPostDto.setPost_picture(post.getPost_picture());
             responseGetMemberPostDto.setHash_tag(hashTagNames);
             responseGetMemberPostDto.setPost_create_time(post.getPost_create_time());
             responseGetMemberPostDto.setBlamed_count(Math.toIntExact(post.getBlamedCount()));
             responseGetMemberPostDto.setSecret(post.getSecret());
             responseGetMemberPostDto.setPost_like_size(post.getPost_like());
-            //  responseGetMemberPostDto.setComment_size((long) post.getComments().size());
 
             if (member_id != -1) {
                 responseGetMemberPostDto.setMine(post.getMember().getId().equals(member_id));
@@ -456,7 +482,7 @@ public class PostService {
         if (results.size() == 0) {
             throw new NotFoundException();
         } else {
-            getPostDtos = createResponseGetMemberPostDto(results, member_id);
+            getPostDtos = createResponseGetMemberPostDto(results, new ArrayList<>(), member_id);
             // 가져온 글들의 ID를 저장합니다.
             System.out.println("Where?");
             return resultPostIds(viewedPostIds, results, getPostDtos);
@@ -487,7 +513,7 @@ public class PostService {
         if (results.size() == 0) {
             throw new NotFoundException();
         } else {
-            getPostDtos = createResponseGetMemberPostDto(results, member_id);
+            getPostDtos = createResponseGetMemberPostDto(results, new ArrayList<>(), member_id);
         }
         return getPostDtos;
     }
@@ -497,7 +523,7 @@ public class PostService {
         List<Post> results = member.getLikedPosts();
         // results를 최신 순으로 정렬
         Collections.sort(results, Comparator.comparing(Post::getPost_create_time).reversed());
-        List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(results, member_id);
+        List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(results,new ArrayList<>(), member_id);
         return getPostDtos;
     }
 
@@ -512,5 +538,19 @@ public class PostService {
             throw new RuntimeException(e);
         }
         return response;
+    }
+
+    public void saveAllHashTagsToRedis() {
+        // MySQL에서 모든 HashTag 데이터를 조회
+        List<HashTag> hashTags = hashTagRepository.findAll();
+
+        for (HashTag hashTag : hashTags) {
+            // Redis Key는 hash_tag_id로 설정
+            String key =  redisKey + hashTag.getId();
+
+            // Redis에 저장 (name, tag_count)
+            redisTemplate.opsForHash().put(key, "name", hashTag.getName());
+            redisTemplate.opsForHash().put(key, "tag_count", hashTag.getTagCount().toString());
+        }
     }
 }

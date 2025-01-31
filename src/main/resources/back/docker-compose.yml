@@ -101,9 +101,27 @@ services:
     restart: unless-stopped
     command:
       - "--mysqld.username=${MYSQL_USER}:${MYSQL_PASSWORD}"
-      - "--mysqld.address=${MYSQL_HOST}:${MYSQL_PORT}"
+      - "--mysqld.address=${MYSQL_READ_HOST}:${MYSQL_PORT}"
     ports:
       - 9104:9104
+  mysqld-exporter2:
+    image: quay.io/prometheus/mysqld-exporter
+    container_name: mysqld-exporter2
+    restart: unless-stopped
+    command:
+      - "--mysqld.username=${MYSQL_USER}:${MYSQL_PASSWORD}"
+      - "--mysqld.address=${MYSQL_READ2_HOST}:${MYSQL_PORT}"
+    ports:
+      - 9105:9105
+  mysqld-exporter3:
+    image: quay.io/prometheus/mysqld-exporter
+    container_name: mysqld-exporter3
+    restart: unless-stopped
+    command:
+      - "--mysqld.username=${MYSQL_USER}:${MYSQL_PASSWORD}"
+      - "--mysqld.address=${MYSQL_READ3_HOST}:${MYSQL_PORT}"
+    ports:
+      - 9106:9106
 
 
 volumes:
