@@ -96,7 +96,7 @@ dependencies {
 	//AmaZon
 	implementation 'software.amazon.awssdk:s3:2.20.68'
 	implementation 'io.github.flashvayne:chatgpt-spring-boot-starter:1.0.4'
-
+	implementation 'org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16' // Log4jdbc 의존성 추가✨
 	//logstash
 	implementation 'net.logstash.logback:logstash-logback-encoder:7.3'
 

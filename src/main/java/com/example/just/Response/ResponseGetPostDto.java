@@ -2,7 +2,6 @@ package com.example.just.Response;
 
 import com.example.just.Dao.PostContent;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import com.example.just.Dao.Post;
@@ -19,7 +18,7 @@ public class ResponseGetPostDto {
 
     private Long post_picture;
 
-    private Date post_create_time;  //글 생성 시간
+    private Long post_create_time;  //글 생성 시간
 
     private boolean secret; //글 공개 여부
 
