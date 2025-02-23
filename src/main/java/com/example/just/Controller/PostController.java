@@ -35,10 +35,10 @@ public class PostController {
             "랜덤하고 중복되지않게 viewed(이미 읽은 글)라는 헤더에 [1, 2, 3] <-set형식 을 프론트에서 넘겨줘야함" +
             " 백에서 넘겨주니까 로컬스토리지에 저장해놓고 넘겨주면 됨\n 자기 글이 조회되면  true")
     @GetMapping("/get/post")
-    @Transactional(readOnly = true)
-    public ResponseEntity<Object> getPosts(@RequestParam Long request_page) throws NotFoundException {
+    //@Transactional(readOnly = true)
+    public ResponseEntity<Object> getPosts(@RequestParam Long request_page, @RequestParam Long cursor) throws NotFoundException {
         try {
-            return ResponseEntity.ok(postService.searchByCursor( request_page, -1L));
+            return ResponseEntity.ok(postService.searchByCursor(cursor, request_page, -1L));
         } catch (NotFoundException | SQLException e) {
             return ResponseEntity.notFound().build();
         }

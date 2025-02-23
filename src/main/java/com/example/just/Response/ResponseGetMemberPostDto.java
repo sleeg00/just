@@ -1,10 +1,8 @@
 package com.example.just.Response;
 
 import com.example.just.Dao.HashTagMap;
-import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 import com.example.just.Dao.PostContent;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import lombok.Getter;
@@ -16,11 +14,11 @@ public class ResponseGetMemberPostDto {
     private Long post_id;
 
     private PostContent post_content;
-    private List<String> hash_tag;    //글 태그
+    private String hash_tag;    //글 태그
 
     private Long post_picture;
 
-    private Date post_create_time;  //글 생성 시간
+    private Long post_create_time;  //글 생성 시간
 
     private boolean secret; //글 공개 여부
 
@@ -38,11 +36,7 @@ public class ResponseGetMemberPostDto {
         this.post_content = post.getPostContent();
         this.post_create_time = post.getPost_create_time();
         this.secret = post.getSecret();
-        List<String> names = new ArrayList<>();
-        for (int j = 0; j < hashTagMaps.size(); j++) {
-            names.add(hashTagMaps.get(j).getHashTag().getName());
-        }
-        this.hash_tag = names;
+        this.hash_tag = hashTagMaps.get(0).getHashTag().getName();
         this.comment_size = Long.valueOf(post.getComments().size());
         this.post_picture = post.getPost_picture();
         this.post_like_size = post.getPost_like();
@@ -64,11 +58,8 @@ public class ResponseGetMemberPostDto {
         this.post_id = results.get(i).getPost_id();
         this.post_content = results.get(i).getPostContent();
         this.post_picture = results.get(i).getPost_picture();
-        List<String> names = new ArrayList<>();
-        for (int j = 0; j < hashTagMaps.size(); j++) {
-            names.add(hashTagMaps.get(j).getHashTag().getName());
-        }
-        this.hash_tag = names;
+
+        this.hash_tag = hashTagMaps.get(0).getHashTag().getName();
         this.post_create_time = results.get(i).getPost_create_time();
         this.blamed_count = Math.toIntExact(results.get(i).getBlamedCount());
         this.secret = results.get(i).getSecret();

@@ -1,8 +1,6 @@
 package com.example.just.Response;
 
-import com.example.just.Dao.PostContent;
 import com.example.just.Document.PostDocument;
-import java.util.Date;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +13,7 @@ public class ResponseSearchDto {
     private String post_content;
     private List<String> hash_tag;
     private Long post_picture;
-    private Date post_create_time;
+    private Long post_create_time;
     private Boolean secret;
     private Long comment_size;
     private Long post_like_size;
