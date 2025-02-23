@@ -1,9 +1,6 @@
 package com.example.just.Document;
 
 import com.example.just.Dao.Post;
-import com.example.just.Dao.PostContent;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -39,7 +36,7 @@ public class PostDocument {
     private Long postPicture;
 
     @Field(type = FieldType.Long)
-    private Date postCreateTime;
+    private Long postCreateTime;
 
     @Field(type = FieldType.Boolean)
     private Boolean secret;

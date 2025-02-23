@@ -31,7 +31,7 @@ public class PutPostDto {
     private Long post_picture;
 
     @JsonIgnore
-    private Date post_create_time;  //글 생성 시간
+    private Long post_create_time;  //글 생성 시간
     private boolean secret; //글 공개 여부
 
     @JsonIgnore
