@@ -32,9 +32,8 @@ public class Post {
     @Column(name = "post_picture")
     private Long post_picture;
 
-    @CreationTimestamp
     @Column(name = "post_create_time")  //글 생성 시간
-    private Date post_create_time;
+    private Long post_create_time;
 
     @Column(name = "post_like")
     private Long post_like;
@@ -91,7 +90,7 @@ public class Post {
         this.blamedCount = 0L;
     }
 
-    public void updatePost(String post_tag, Long post_like, Date post_create_time,
+    public void updatePost(String post_tag, Long post_like, Long post_create_time,
                            boolean secret, String emoticon, String post_category, Member member) {
         this.post_like = post_like;
         this.post_create_time = post_create_time;
@@ -128,7 +127,7 @@ public class Post {
     public void changePost(PutPostDto postDto, Member member, Post post) {
         this.post_id = post.getPost_id();
         this.member = member;
-        this.setPost_create_time(new Date(System.currentTimeMillis()));
+        this.setPost_create_time(new Date(System.currentTimeMillis()).getTime());
         this.setPost_like(post.getPost_like());
         this.post_picture = postDto.getPost_picture();
         this.secret = postDto.getSecret();
@@ -144,14 +143,10 @@ public class Post {
 
     public List<HashTag> getHashTag() {
         List<HashTag> array = new ArrayList<>();
-        /*
-        if (this.hash_tag != null) {
-            for (int i = 0; i < this.hash_tag.size(); i++) {
-                array.add(this.hash_tag.get(i));
-            }
-        }
 
-         */
+
+
+
         return array;
     }
 
