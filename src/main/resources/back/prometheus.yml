@@ -8,11 +8,10 @@ scrape_configs:
       - targets:
           - "3.38.113.85:9000"
 
-  - job_name: "mysql_read"
+  - job_name: "mysql"
     scrape_interval: 60s
     static_configs:
       - targets:
           - "3.38.113.85:9104"
-          - "3.38.113.85:9105"
-          - "3.38.113.85:9106"
+
 
