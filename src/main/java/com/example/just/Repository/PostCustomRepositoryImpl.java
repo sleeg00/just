@@ -35,4 +35,21 @@ public class PostCustomRepositoryImpl implements PostCustomRepository {
                 .limit(limit + 1)
                 .fetch();
     }
+
+    @Override
+    public List<Tuple> getMemberPost(Long member_id) {
+        QPost post = QPost.post;
+        QHashTagMap hashTagMaps = QHashTagMap.hashTagMap;
+        QPostContent postContent = QPostContent.postContent;
+        QHashTag hashTag = QHashTag.hashTag;
+
+        return query.select(post, hashTagMaps, hashTag)
+                .from(post)
+                .leftJoin(post.postContent, postContent).fetchJoin()
+                .leftJoin(hashTagMaps).on(hashTagMaps.post.post_id.eq(post.post_id)).fetchJoin()
+                .leftJoin(hashTag).on(hashTag.id.eq(hashTagMaps.hashTag.id)).fetchJoin()
+                .where(post.member.id.eq(member_id))
+                .orderBy(post.post_create_time.desc())
+                .fetch();
+    }
 }
