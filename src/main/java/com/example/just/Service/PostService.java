@@ -1,28 +1,23 @@
 package com.example.just.Service;
 
 
-
-
-
-
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 
 
-import com.example.just.Dao.PostContent;
 import com.example.just.Dao.QBlame;
 import com.example.just.Dao.QComment;
 import com.example.just.Dao.QHashTag;
 import com.example.just.Dao.QHashTagMap;
-import com.example.just.Dao.QMember;
 import com.example.just.Dao.QPost;
 import com.example.just.Dao.QPostContent;
 import com.example.just.Document.HashTagDocument;
 import com.example.just.Document.PostDocument;
 import com.example.just.Dto.PostPostDto;
 import com.example.just.Dto.PutPostDto;
+import com.example.just.Exception.NotFoundException;
 import com.example.just.Repository.BlameRepository;
 
 import com.example.just.Repository.HashTagESRepository;
@@ -49,7 +44,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -107,7 +102,8 @@ public class PostService {
 
     //@Transactional(readOnly = true)
     public Member checkMember(Long member_id) {
-         System.out.println("Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+        System.out.println(
+                "Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
         Optional<Member> optionalMember = memberRepository.findById(member_id);
         if (!optionalMember.isPresent()) {  //아이디 없을시 예외처리
             throw new NoSuchElementException("DB에 존재하지 않는 ID : " + member_id);
@@ -225,14 +221,17 @@ public class PostService {
     }
 
 
-
-    public ResponseGetPost searchByCursor(Long cursor, Long limit, Long member_id) throws NotFoundException, SQLException { //글 조
+    public ResponseGetPost searchByCursor(Long cursor, Long limit, Long member_id)
+            throws NotFoundException, SQLException { //글 조
         // Querydsl Impl 생성후 PostRepository 상속
         List<Tuple> posts = postRepository.findPostsByCursor(cursor, limit);
 
-        //  다음 페이지 존재 여부 확인을 위해 limit+1개를 가져왔으므로, 초과된 1개 데이터 제거
         boolean hasNext = posts.size() > limit;
-        if (hasNext) posts.remove(posts.size() - 1);
+        if (!posts.isEmpty() && hasNext) {
+            posts.remove(posts.size() - 1);
+        }  else {
+            throw new NoSuchElementException("마지막 페이지입니다.");
+        }
 
         List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(posts, member_id);
         return resultPostIds(posts, getPostDtos, hasNext);
@@ -265,10 +264,8 @@ public class PostService {
             missingHashIds.remove(id);  // 캐시에서 찾은 hashTagId 제거
         }
 
-
         return hashTagNames;
     }
-
 
 
     private ResponseGetPost resultPostIds(List<Tuple> results,
@@ -281,6 +278,7 @@ public class PostService {
 
     private List<ResponseGetMemberPostDto> createResponseGetMemberPostDto(List<Tuple> results, Long member_id) {
         List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
+
         for (Tuple tuple : results) {
             ResponseGetMemberPostDto dto = new ResponseGetMemberPostDto();
             Post post = tuple.get(QPost.post);
@@ -410,7 +408,7 @@ public class PostService {
                 postMapValue.setComments(postsWithComments.get(i++).getComments());
             }
         }
-        List<Tuple> results =null;
+        List<Tuple> results = null;
 
         List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
         if (results.size() == 0) {
@@ -424,22 +422,18 @@ public class PostService {
 
     }
 
-    public List<ResponseGetMemberPostDto> getMyPost(Long member_id) throws NotFoundException {
-
-        List<Post> posts = postRepository.findByMemberId(member_id);
-        List<Tuple> results = null;
-
-
-
-        List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
-        if (results.size() == 0) {
-            throw new NotFoundException();
-        } else {
-            HashMap<Long, String> map = null;
-            getPostDtos = createResponseGetMemberPostDto(results,  member_id);
+    public List<ResponseGetMemberPostDto> getMyPost(Long member_id) {
+        List<Tuple> posts = postRepository.getMemberPost(member_id);
+        // 조회된 결과가 없으면 예외 발생
+        if (posts.isEmpty()) {
+            throw new NotFoundException("해당 사용자의 게시글을 찾을 수 없습니다.");
         }
+        List<ResponseGetMemberPostDto> getPostDtos;
+        getPostDtos = createResponseGetMemberPostDto(posts, member_id);
+
         return getPostDtos;
     }
+
 
     public List<ResponseGetMemberPostDto> getLikeMemberPost(Long member_id) throws NotFoundException {
         Member member = checkMember(member_id); //존재한다면 객체 생성
@@ -470,7 +464,7 @@ public class PostService {
 
         for (HashTag hashTag : hashTags) {
             // Redis Key는 hash_tag_id로 설정
-            String key =  redisKey + hashTag.getId();
+            String key = redisKey + hashTag.getId();
 
             // Redis에 저장 (name, tag_count)
             redisTemplate.opsForHash().put(key, "name", hashTag.getName());
