@@ -19,8 +19,6 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<Post, Long>, PostCustomRepository {
 
     List<Post> findByBlamedCountGreaterThanEqualOrderByBlamedCountDesc(int blamed_count);
-    @EntityGraph(attributePaths = {"comments", "member"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<Post> findByMemberId(Long member_id);
 
     @Query("SELECT COUNT(p) FROM Post p")
     long countAllPosts();
