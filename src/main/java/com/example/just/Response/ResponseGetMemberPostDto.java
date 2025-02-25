@@ -1,9 +1,10 @@
 package com.example.just.Response;
 
+import static com.example.just.Dao.QPost.post;
+
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Post;
 import com.example.just.Dao.PostContent;
-import java.util.Date;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,36 +21,21 @@ public class ResponseGetMemberPostDto {
 
     private Long post_create_time;  //글 생성 시간
 
-    private boolean secret; //글 공개 여부
+    private Boolean secret; // nullable Boolean으로 변경
+
 
     private String post_category; //글 카테고리
 
     private Long comment_size;
 
     private Long post_like_size;
-    private int blamed_count;
-    private boolean like;
+    private Long blamed_count;
+
+
     private boolean mine;
 
-    public ResponseGetMemberPostDto(Post post,  Long member_id,  List<HashTagMap> hashTagMaps) {
-        this.post_id = post.getPost_id();
-        this.post_content = post.getPostContent();
-        this.post_create_time = post.getPost_create_time();
-        this.secret = post.getSecret();
-        this.hash_tag = hashTagMaps.get(0).getHashTag().getName();
-        this.comment_size = Long.valueOf(post.getComments().size());
-        this.post_picture = post.getPost_picture();
-        this.post_like_size = post.getPost_like();
-        this.blamed_count = Math.toIntExact(post.getBlamedCount());
-        this.like = false;
-        for (int i = 0; i < post.getLikedMembers().size(); i++) {
-            System.out.println(post.getLikedMembers().get(i).getId());
-            if (post.getLikedMembers().get(i).getId() == member_id) {
+    public ResponseGetMemberPostDto() {
 
-                this.like = true;
-                break;
-            }
-        }
     }
 
 
@@ -61,7 +47,7 @@ public class ResponseGetMemberPostDto {
 
         this.hash_tag = hashTagMaps.get(0).getHashTag().getName();
         this.post_create_time = results.get(i).getPost_create_time();
-        this.blamed_count = Math.toIntExact(results.get(i).getBlamedCount());
+        this.blamed_count = results.get(i).getBlamedCount();
         this.secret = results.get(i).getSecret();
         this.post_like_size = results.get(i).getPost_like();
         this.comment_size = ((long) results.get(i).getComments().size());
@@ -74,7 +60,4 @@ public class ResponseGetMemberPostDto {
         }
     }
 
-    public ResponseGetMemberPostDto() {
-
-    }
 }
