@@ -51,7 +51,6 @@ public class PostController {
     @Operation(summary = "자기의 게시글을 조회하는 API", description = "<big> 자신의 게시글을 조회한다</big>")
     @GetMapping("/get/mypost")
     public ResponseEntity<Object> getMyPosts(HttpServletRequest request) throws NotFoundException {
-
         Long member_id = getAccessTokenOfMemberId(request);
         try {
             return ResponseEntity.ok(postService.getMyPost(member_id));
