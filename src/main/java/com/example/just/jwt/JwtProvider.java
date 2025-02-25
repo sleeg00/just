@@ -1,6 +1,7 @@
 package com.example.just.jwt;
 
 import com.example.just.Dao.Member;
+import com.example.just.Exception.JwtValidationException;
 import com.example.just.Repository.MemberRepository;
 import com.example.just.Repository.RefreshTokenRepository;
 import io.jsonwebtoken.*;
@@ -10,6 +11,7 @@ import java.util.SortedMap;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -101,7 +103,7 @@ public class JwtProvider implements InitializingBean {
         if(StringUtils.hasText(bearerToken)&&bearerToken.startsWith("Bearer ")){
             return bearerToken.substring(7);
         }
-        return null;
+        throw new JwtValidationException("JWT 토큰이 제공되지 않았습니다.", new IllegalAccessError("JWT String argument cannot be null or empty"));
     }
 
     public String getRefreshToken(HttpServletRequest request){
@@ -134,19 +136,20 @@ public class JwtProvider implements InitializingBean {
     }
 
     //토큰파싱하고 예외처리
-    public boolean validateToken(String token){
+    public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-          //  System.out.println("잘못된 JWT 서명입니다.");
+        } catch (SecurityException | MalformedJwtException e) {
+            throw new JwtValidationException("잘못된 JWT 서명입니다.", e);
         } catch (ExpiredJwtException e) {
-          //  System.out.println("만료된 JWT 토큰입니다.");
+            throw new JwtValidationException("만료된 JWT 토큰입니다.", e);
         } catch (UnsupportedJwtException e) {
-           // System.out.println("지원되지 않는 JWT 토큰입니다.");
+            throw new JwtValidationException("지원되지 않는 JWT 토큰입니다.", e);
         } catch (IllegalArgumentException e) {
-           // System.out.println("JWT 토큰이 잘못되었습니다.");
+            throw new JwtValidationException("JWT 토큰이 잘못되었습니다.", e);
         }
-        return false;
     }
+
+
 }
