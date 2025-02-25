@@ -36,10 +36,11 @@ public class PostController {
             " 백에서 넘겨주니까 로컬스토리지에 저장해놓고 넘겨주면 됨\n 자기 글이 조회되면  true")
     @GetMapping("/get/post")
     //@Transactional(readOnly = true)
-    public ResponseEntity<Object> getPosts(@RequestParam Long request_page, @RequestParam Long cursor) throws NotFoundException {
+    public ResponseEntity<Object> getPosts(@RequestParam Long request_page, @RequestParam Long cursor)
+            throws NotFoundException {
         try {
             return ResponseEntity.ok(postService.searchByCursor(cursor, request_page, -1L));
-        } catch (NotFoundException | SQLException e) {
+        } catch (SQLException e) {
             return ResponseEntity.notFound().build();
         }
     }
@@ -48,15 +49,12 @@ public class PostController {
     public void redis() throws NotFoundException {
         postService.saveAllHashTagsToRedis();
     }
+
     @Operation(summary = "자기의 게시글을 조회하는 API", description = "<big> 자신의 게시글을 조회한다</big>")
     @GetMapping("/get/mypost")
     public ResponseEntity<Object> getMyPosts(HttpServletRequest request) throws NotFoundException {
         Long member_id = getAccessTokenOfMemberId(request);
-        try {
-            return ResponseEntity.ok(postService.getMyPost(member_id));
-        } catch (NotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(postService.getMyPost(member_id));
     }
 
 
@@ -67,11 +65,7 @@ public class PostController {
         String cursor = request.getHeader("viewed");
         Long member_id = getAccessTokenOfMemberId(request);
 
-        try {
-            return ResponseEntity.ok(postService.searchByCursorMember(cursor, request_page, member_id));
-        } catch (NotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(postService.searchByCursorMember(cursor, request_page, member_id));
     }
 
     @Operation(summary = "게시글 작성 api", description = "{\n"
@@ -91,20 +85,18 @@ public class PostController {
         Member member = postService.checkMember(member_id);
         return postService.write(member, postDto);
     }
+
     @PostMapping("/test/post/post")
-    public void testWrite(@RequestParam Long member_id,@RequestBody PostPostDto postDto) {
-       // postService.write(member_id, postDto);
+    public void testWrite(@RequestParam Long member_id, @RequestBody PostPostDto postDto) {
+        // postService.write(member_id, postDto);
     }
+
     @Operation(summary = "게시글 삭제 api", description = "\n 글이 삭제되면 value : 삭제 완료"
             + "\n 글이 없으면 value : 글이 없습니다.")
     @DeleteMapping("/delete/post")
     public ResponseEntity<String> deletePost(@RequestParam Long post_id) throws NotFoundException {
-        try {
-            postService.deletePost(post_id);
-            return ResponseEntity.ok("삭제 완료");
-        } catch (NotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        postService.deletePost(post_id);
+        return ResponseEntity.ok("삭제 완료");
     }
 
     @Operation(summary = "게시글 수정 api", description = "JSON넘길 때 null이 하나도 있으면 안됨 꼭 다채워서 넘기기")
@@ -112,11 +104,7 @@ public class PostController {
     public ResponseEntity<Object> putPost(HttpServletRequest request,
                                           @RequestBody PutPostDto postDto) throws NotFoundException {
         Long member_id = getAccessTokenOfMemberId(request);
-        try {
-            return ResponseEntity.ok(postService.putPost(member_id, postDto));
-        } catch (NotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(postService.putPost(member_id, postDto));
     }
 
     @Operation(summary = "게시글 좋아요 api", description = "자기가 이 글이 좋아요를 누른거면 Response의 value: 좋아요 완료"
