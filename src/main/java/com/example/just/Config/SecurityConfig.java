@@ -17,8 +17,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-@EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -40,6 +40,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/api/send",
             "/api/**/send",
             "/api/**/token",
+            "/swagger-ui/**",
+            "/swagger-ui/index.html#"
     };
 
     public SecurityConfig(
@@ -57,11 +59,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer2() {  //해당 URL은 필터 거치지 않겠다
-        return (web -> web.ignoring().antMatchers("/api/**", "/h2-console","/swagger/**","/swagger-ui/**","/actuator/**"));
-
-        //return (web -> web.ignoring().antMatchers("/test"));
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().antMatchers(
+                "/swagger-ui/**",
+                "/swagger-ui/index.html",
+                "/swagger-resources/**",
+                "/v2/api-docs",
+                "/v3/api-docs",
+                "/webjars/**",
+                "/configuration/ui",
+                "/configuration/security",
+                "/api/**"
+        );
     }
+
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -76,6 +87,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers("/api/**").permitAll()
                 .antMatchers("/admin/**").permitAll()
+                .antMatchers("/swagger-ui/index.html").permitAll()
                 .antMatchers(permitList).permitAll()
                 .antMatchers("/test/**").hasRole("USER")
                 .anyRequest().authenticated()
