@@ -55,6 +55,7 @@ public class HashTag {
 
     public HashTag(String name) {
         this.name = name;
+        this.tagCount = 0L;
     }
 
     public HashTag(Long hashTagId, String name, Long tagCount) {

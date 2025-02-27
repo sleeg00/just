@@ -3,15 +3,14 @@ package com.example.just.Dao;
 import com.example.just.Dto.PostPostDto;
 import com.example.just.Dto.PutPostDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 
 @Entity
 @Table(name = "post")
@@ -75,7 +74,7 @@ public class Post {
         this.emoticon = this.emoticon == null ? "0" : this.emoticon;
     }
 
-    public void writePost(PostPostDto postDto, Member member) {
+    public Post writePost(PostPostDto postDto, Member member) {
         PostContent postContent1 = new PostContent();
         postContent1.setContent(postDto.getContent());
         this.postContent = postContent1;
@@ -88,6 +87,8 @@ public class Post {
         this.post_like = 0L;
         this.member = member;
         this.blamedCount = 0L;
+        this.post_create_time = Long.valueOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+        return this;
     }
 
     public void updatePost(String post_tag, Long post_like, Long post_create_time,

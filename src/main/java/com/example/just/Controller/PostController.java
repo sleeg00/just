@@ -1,18 +1,24 @@
 package com.example.just.Controller;
 
 
+import com.example.just.Aop.ExtractMember;
 import com.example.just.Dao.Member;
+import com.example.just.Dao.Post;
 import com.example.just.Dto.*;
+import com.example.just.Repository.MemberRepository;
 import com.example.just.Service.PostService;
 import com.example.just.jwt.JwtProvider;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.Operation;
 import java.sql.SQLException;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +35,8 @@ public class PostController {
 
     @Autowired
     JwtProvider jwtProvider;
+    @Autowired
+    private MemberRepository memberRepository;
 
 
     @Operation(summary = "게시글 랜덤하게 조회 api(비회원용)", description = "<big>게시글을 조회한다</big>" +
@@ -68,23 +76,14 @@ public class PostController {
         return ResponseEntity.ok(postService.searchByCursorMember(cursor, request_page, member_id));
     }
 
-    @Operation(summary = "게시글 작성 api", description = "{\n"
-            + "  \"hash_tage\": [\n"
-            + "    \"바보\", \"멍청이\""
-            + "  ],\n"
-            + "  \"post_content\": [\n"
-            + "    \"오늘은 2월 8일 입니다.\", \"내일은 휴가입니다."
-            + "  ],\n"
-            + "  \"post_picture\": 0,\n"
-            + "  \"secret\": true\n"
-            + "}"
-            + "이런식으로 작성하면 됩니다.")
-    @PostMapping("/post/post")
-    public PostPostDto write(@RequestParam Long member_id,
-                             @RequestBody PostPostDto postDto) {
-        Member member = postService.checkMember(member_id);
-        return postService.write(member, postDto);
+    @Operation(summary = "게시글 작성 API", description = "게시글을 작성합니다.")
+    @PostMapping("/posts")
+    //@ExtractMember
+    public ResponseEntity<Post> write(@RequestBody PostPostDto postDto) {
+        Optional<Member> member = memberRepository.findById(1L);
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.write(member.get(), postDto));
     }
+
 
     @PostMapping("/test/post/post")
     public void testWrite(@RequestParam Long member_id, @RequestBody PostPostDto postDto) {

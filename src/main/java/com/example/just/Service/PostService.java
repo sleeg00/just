@@ -86,8 +86,9 @@ public class PostService {
 
     @Autowired
     PostContentESRespository postContentESRespository;
+
     @Autowired
-    private HashTagMapRepository hashTagMapRepository;
+    private HashTagService hashTagService;
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -121,45 +122,16 @@ public class PostService {
         return post;
     }
 
-    @Transactional(readOnly = false)
-    public PostPostDto write(Member member, PostPostDto postDto) {    //글 작성
-        // System.out.println("Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
-        Post post = new Post();
+    public Post write(Member member, PostPostDto postDto) {
+        Post post = new Post().writePost(postDto, member);
+        postRepository.save(post);
 
-        post.writePost(postDto, member);
-        Post p = postRepository.save(post);
+        // 해시태그 존재시
+        Optional.ofNullable(postDto.getHash_tag())
+                .ifPresent(hashTags -> hashTagService.saveHashTag(hashTags, post));
 
-        List<String> hashTags = postDto.getHash_tag();
-        saveHashTag(hashTags, p);
-
-        PostDocument postDocument = new PostDocument(p);
-        postContentESRespository.save(new PostDocument(p));
-        return postDto;
-    }
-
-    private void saveHashTag(List<String> hashTags, Post p) { // Redis
-        for (int i = 0; i < hashTags.size(); i++) {
-            HashTag hashTag = findTag(hashTags, i);
-            HashTagMap hashTagMap = new HashTagMap();
-            if (hashTag == null) {
-                HashTag newHashTag = new HashTag(hashTags.get(i));
-                newHashTag.setTagCount(1L);
-                newHashTag = hashTagRepository.save(newHashTag);
-                hashTagESRepository.save(new HashTagDocument(newHashTag));
-                hashTagMap = new HashTagMap(newHashTag, p); //객체 그래프 설정
-            } else {
-                hashTag.setTagCount(hashTag.getTagCount() + 1);
-                hashTagRepository.save(hashTag);
-                hashTagESRepository.save(new HashTagDocument(hashTag));
-                hashTagMap = new HashTagMap(hashTag, p); //객체 그래프 설정
-            }
-            hashTagMapRepository.save(hashTagMap);
-        }
-    }
-
-    @Transactional(readOnly = false)
-    private HashTag findTag(List<String> hashTags, int i) {
-        return hashTagRepository.findByName(hashTags.get(i));
+        postContentESRespository.save(new PostDocument(post));
+        return post;
     }
 
 
@@ -190,7 +162,7 @@ public class PostService {
         checkPost.changePost(postDto, member, checkPost);
 
         Post p = postRepository.save(checkPost);
-        saveHashTag(postDto.getHash_tage(), p);
+        hashTagService.saveHashTag(postDto.getHash_tage(), p);
 
         postContentESRespository.save(new PostDocument(checkPost));
 
@@ -229,7 +201,7 @@ public class PostService {
         boolean hasNext = posts.size() > limit;
         if (!posts.isEmpty() && hasNext) {
             posts.remove(posts.size() - 1);
-        }  else {
+        } else {
             throw new NoSuchElementException("마지막 페이지입니다.");
         }
 
