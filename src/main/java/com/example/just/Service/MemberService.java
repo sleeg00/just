@@ -7,16 +7,13 @@ import com.example.just.Dto.MemberDto;
 import com.example.just.Dto.TokenDto;
 import com.example.just.Mapper.MemberMapper;
 import com.example.just.Repository.MemberRepository;
-import com.example.just.jwt.JwtFilter;
 import com.example.just.jwt.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service

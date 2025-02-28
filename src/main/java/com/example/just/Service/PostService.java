@@ -21,7 +21,6 @@ import com.example.just.Exception.NotFoundException;
 import com.example.just.Repository.BlameRepository;
 
 import com.example.just.Repository.HashTagESRepository;
-import com.example.just.Repository.HashTagMapRepository;
 import com.example.just.Repository.PostContentRepository;
 import com.example.just.Response.ResponseGetMemberPostDto;
 import com.example.just.Response.ResponsePutPostDto;

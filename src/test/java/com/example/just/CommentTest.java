@@ -1,39 +1,9 @@
 package com.example.just;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import com.example.just.Dao.Comment;
-import com.example.just.Dao.Member;
-import com.example.just.Dao.Post;
-import com.example.just.Dao.Role;
-import com.example.just.Dto.CommentDto;
-import com.example.just.Dto.PutCommentDto;
-import com.example.just.Response.ResponseMyCommentDto;
-import com.example.just.Response.ResponsePostCommentDto;
-import com.example.just.Repository.CommentRepository;
-import com.example.just.Repository.MemberRepository;
-import com.example.just.Repository.PostRepository;
-import com.example.just.Service.CommentService;
-import com.example.just.jwt.JwtFilter;
-import com.example.just.jwt.JwtProvider;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
