@@ -1,7 +1,5 @@
 package com.example.just.Response;
 
-import static com.example.just.Dao.QPost.post;
-
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Post;
 import com.example.just.Dao.PostContent;

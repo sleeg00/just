@@ -5,13 +5,6 @@ import com.example.just.Dao.Member;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-
 
 @Getter
 @Setter

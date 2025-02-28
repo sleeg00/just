@@ -1,7 +1,6 @@
 package com.example.just.Controller;
 
 
-import com.example.just.Aop.ExtractMember;
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 import com.example.just.Dto.*;
@@ -18,8 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
