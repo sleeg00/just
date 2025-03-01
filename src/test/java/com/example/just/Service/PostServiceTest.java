@@ -48,7 +48,7 @@ class PostServiceTest {
             members.add(member);
         }
     }
-
+//
     @DisplayName("글_쓰기_테스트")
     @ParameterizedTest
     @ValueSource(ints = {0, 1, 2, 3, 4})
