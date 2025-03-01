@@ -30,8 +30,7 @@ public class PostCustomRepositoryImpl implements PostCustomRepository {
                 .leftJoin(post.postContent, postContent).fetchJoin()
                 .leftJoin(hashTagMaps).on(hashTagMaps.post.post_id.eq(post.post_id)).fetchJoin()
                 .leftJoin(hashTag).on(hashTag.id.eq(hashTagMaps.hashTag.id)).fetchJoin()
-                .where(post.post_create_time.lt(cursor))
-                .orderBy(post.post_create_time.desc())
+                .where(post.post_create_time.gt(-cursor))  // cursor보다 큰 값 조회
                 .limit(limit + 1)
                 .fetch();
     }
@@ -49,7 +48,6 @@ public class PostCustomRepositoryImpl implements PostCustomRepository {
                 .leftJoin(hashTagMaps).on(hashTagMaps.post.post_id.eq(post.post_id)).fetchJoin()
                 .leftJoin(hashTag).on(hashTag.id.eq(hashTagMaps.hashTag.id)).fetchJoin()
                 .where(post.member.id.eq(member_id))
-                .orderBy(post.post_create_time.desc())
                 .fetch();
     }
 }

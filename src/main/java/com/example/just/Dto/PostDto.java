@@ -27,7 +27,7 @@ public class PostDto {
     private Long post_picture;
 
     @JsonIgnore
-    private Timestamp post_create_time;  //글 생성 시간
+    private Long post_create_time;  //글 생성 시간
 
     private boolean secret; //글 공개 여부
 

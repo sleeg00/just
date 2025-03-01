@@ -22,7 +22,7 @@ public class HashTagService {
     @Autowired
     private HashTagMapRepository hashTagMapRepository;
 
-    public void saveHashTag(List<String> hashTags, Post post) {
+    public List<HashTagMap> saveHashTag(List<String> hashTags, Post post) {
         List<HashTag> updatedTags = hashTags.stream()
                 .map(tagName -> findTag(tagName)
                         .orElseGet(() -> {  // 없으면 새로 생성
@@ -42,7 +42,7 @@ public class HashTagService {
         List<HashTagMap> hashTagMaps = updatedTags.stream()
                 .map(tag -> new HashTagMap(tag, post))
                 .collect(Collectors.toList());
-        hashTagMapRepository.saveAll(hashTagMaps);
+        return hashTagMaps;
     }
 
     private Optional<HashTag> findTag(String name) {

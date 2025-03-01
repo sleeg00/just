@@ -31,6 +31,7 @@ import com.example.just.Repository.PostContentESRespository;
 import com.example.just.Repository.PostRepository;
 
 import com.example.just.jwt.JwtProvider;
+import com.google.firebase.database.annotations.Nullable;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -121,16 +122,19 @@ public class PostService {
         return post;
     }
 
+    @Transactional
     public Post write(Member member, PostPostDto postDto) {
         Post post = new Post().writePost(postDto, member);
-        postRepository.save(post);
-
         // 해시태그 존재시
-        Optional.ofNullable(postDto.getHash_tag())
-                .ifPresent(hashTags -> hashTagService.saveHashTag(hashTags, post));
+        List<HashTagMap> hashTagMaps = Optional.ofNullable(postDto.getHash_tag())
+                .map(hashTags -> hashTagService.saveHashTag(hashTags, post))
+                .orElse(Collections.emptyList());
+
+        post.setHashTagMaps(hashTagMaps);
+        Post returnPost = postRepository.save(post);
 
         postContentESRespository.save(new PostDocument(post));
-        return post;
+        return returnPost;
     }
 
 
@@ -192,7 +196,7 @@ public class PostService {
     }
 
 
-    public ResponseGetPost searchByCursor(Long cursor, Long limit, Long member_id)
+    public ResponseGetPost searchByCursor(Long cursor, Long limit)
             throws NotFoundException, SQLException { //글 조
         // Querydsl Impl 생성후 PostRepository 상속
         List<Tuple> posts = postRepository.findPostsByCursor(cursor, limit);
@@ -204,7 +208,7 @@ public class PostService {
             throw new NoSuchElementException("마지막 페이지입니다.");
         }
 
-        List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(posts, member_id);
+        List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(posts, null);
         return resultPostIds(posts, getPostDtos, hasNext);
     }
 
@@ -247,7 +251,7 @@ public class PostService {
         return responseGetPost;
     }
 
-    private List<ResponseGetMemberPostDto> createResponseGetMemberPostDto(List<Tuple> results, Long member_id) {
+    private List<ResponseGetMemberPostDto> createResponseGetMemberPostDto(List<Tuple> results,  @Nullable Long member_id) {
         List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
 
         for (Tuple tuple : results) {
@@ -266,7 +270,7 @@ public class PostService {
                 dto.setHash_tag(hashTag.getName());
             }
             // 회원 ID 비교 (게시글 작성자와 현재 요청한 회원)
-            if (member_id != -1) {
+            if (member_id != null) {
                 dto.setMine(post.getMember().getId().equals(member_id));
             }
             getPostDtos.add(dto);
@@ -316,7 +320,7 @@ public class PostService {
         return ResponseEntity.ok(responsePost);
     }
 
-    public ResponseGetPost searchByCursorMember(String cursor, Long limit, Long member_id) throws NotFoundException {
+    public ResponseGetPost searchByCursorMember(Long cursor, Long limit, Long member_id) throws NotFoundException {
         QPost post = QPost.post;
         QBlame blame = QBlame.blame;
         QHashTagMap hashTagMaps = QHashTagMap.hashTagMap;
