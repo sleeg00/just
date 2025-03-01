@@ -75,12 +75,71 @@ public class Post {
     }
 
 
+    public Post writePost(PostPostDto postDto, Member member) {
+        PostContent postContent1 = new PostContent();
+        postContent1.setContent(postDto.getContent());
+        this.postContent = postContent1;
+        postContent1.setPost(this);
+        this.post_picture = postDto.getPost_picture();
+        this.secret = postDto.getSecret();
+        this.emoticon = "";
+        this.post_like = 0L;
+        this.member = member;
+        this.blamedCount = 0L;
+        this.post_create_time = Long.valueOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+        return this;
+    }
+
+    public void updatePost(String post_tag, Long post_like, Long post_create_time,
+                           boolean secret, String emoticon, String post_category, Member member) {
+        this.post_like = post_like;
+        this.post_create_time = post_create_time;
+        this.secret = secret;
+        this.emoticon = emoticon;
+        this.member = member;
+        this.member.updateMember(this);
+    }
+
+    public void addLike(Member member) {
+        if (!likedMembers.contains(member)) {
+            member.getLikedPosts().add(this);//좋아한 글 List에 해당 글의 객체 추가
+            post_like++;
+        }
+    }
+
+    public void removeLike(Member member) {
+        if (likedMembers.contains(member)) {
+            member.getLikedPosts().remove(this);
+            post_like--;
+        }
+    }
+
+
+    public void addBlamed() {
+        blamedCount++;
+    }
+
 
     public boolean getSecret() {
         return this.secret;
     }
 
-
+    public void changePost(PutPostDto postDto, Member member, Post post) {
+        this.post_id = post.getPost_id();
+        this.member = member;
+        this.setPost_create_time(new Date(System.currentTimeMillis()).getTime());
+        this.setPost_like(post.getPost_like());
+        this.post_picture = postDto.getPost_picture();
+        this.secret = postDto.getSecret();
+        this.postContent = postDto.getPost_content();
+        this.hashTagMaps = new ArrayList<>();
+        for (int i = 0; i < postDto.getHash_tage().size(); i++) {
+            HashTagMap hashTagMap = new HashTagMap();
+            hashTagMap.setPost(this);
+            hashTagMap.setHashTag(new HashTag(postDto.getHash_tage().get(i)));
+            this.addHashTagMaps(hashTagMap);
+        }
+    }
 
     public List<HashTag> getHashTag() {
         List<HashTag> array = new ArrayList<>();

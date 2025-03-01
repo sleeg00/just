@@ -46,7 +46,7 @@ public class ResponsePutPostDto {
         this.post_content = post.getPostContent();
         this.post_id = post.getPost_id();
         this.post_picture = post.getPost_picture();
-        this.hash_tag = post.getHashTag();
+
         this.secret = post.getSecret();
     }
 }

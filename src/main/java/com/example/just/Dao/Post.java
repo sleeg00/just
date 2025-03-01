@@ -96,8 +96,6 @@ public class Post {
         PostContent postContent1 = new PostContent();
         postContent1.setContent(postDto.getContent());
         this.postContent = postContent1;
-
-        // postContent 객체에 post를 설정
         postContent1.setPost(this);
         this.post_picture = postDto.getPost_picture();
         this.secret = postDto.getSecret();
@@ -159,16 +157,6 @@ public class Post {
             this.addHashTagMaps(hashTagMap);
         }
     }
-
-    public List<HashTag> getHashTag() {
-        List<HashTag> array = new ArrayList<>();
-
-
-
-
-        return array;
-    }
-
 
     public void addHashTagMaps(HashTagMap hashTagMap) {
         this.hashTagMaps.add(hashTagMap);

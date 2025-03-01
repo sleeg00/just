@@ -30,7 +30,7 @@ public class HashTag {
     @Column(name="hash_tag_id")
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "tag_count")
