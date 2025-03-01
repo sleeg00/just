@@ -62,3 +62,4 @@ out/
 
 .vscode/
 /src/main/resources/application-test.yml
+*.yml
