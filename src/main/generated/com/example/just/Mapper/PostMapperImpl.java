@@ -2,7 +2,7 @@ package com.example.just.Mapper;
 
 import com.example.just.Dao.Comment;
 import com.example.just.Dao.Post;
-import com.example.just.Dto.PutPostDto;
+import com.example.just.Dto.Post.PutPostDto;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.processing.Generated;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-03-01T14:38:22+0900",
+    date = "2025-03-02T22:10:37+0900",
     comments = "version: 1.5.3.Final, compiler: IncrementalProcessingEnvironment from gradle-language-java-7.2.jar, environment: Java 11.0.11 (AdoptOpenJDK)"
 )
 @Component

@@ -1,27 +1,28 @@
 package com.example.just.Service;
 
 
-
-import com.example.just.Dao.HashTag;
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
-import com.example.just.Dao.PostContent;
-import com.example.just.Dto.PostPostDto;
+import com.example.just.Dto.Post.PostPostDto;
 import com.example.just.Repository.MemberRepository;
+import com.example.just.Repository.PostLikeRepository;
 import com.example.just.Repository.PostRepository;
-import com.google.cloud.Tuple;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.platform.commons.logging.Logger;
+import org.junit.platform.commons.logging.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.core.parameters.P;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +39,9 @@ class PostServiceTest {
     private PostRepository postRepository;
     @Autowired
     private PostService postService;
+    @Autowired
+    private PostLikeRepository postLikeRepository;
+    private final Logger logger = LoggerFactory.getLogger(PostServiceTest.class);
     private List<Member> members = new ArrayList<>();
 
     @BeforeEach
@@ -48,7 +52,8 @@ class PostServiceTest {
             members.add(member);
         }
     }
-//
+
+    //
     @DisplayName("글_쓰기_테스트")
     @ParameterizedTest
     @ValueSource(ints = {0, 1, 2, 3, 4})
@@ -60,8 +65,8 @@ class PostServiceTest {
 
         assertEquals(postDto.getContent(), post.getPostContent().getContent());
         assertEquals(postDto.getMember().getId(), post.getMember().getId());
-        assertEquals(postDto.getHash_tag().get(0),post.getHashTagMaps().get(0).getHashTag().getName());
-        assertEquals(postDto.getHash_tag().get(1),post.getHashTagMaps().get(1).getHashTag().getName());
+        assertEquals(postDto.getHash_tag().get(0), post.getHashTagMaps().get(0).getHashTag().getName());
+        assertEquals(postDto.getHash_tag().get(1), post.getHashTagMaps().get(1).getHashTag().getName());
     }
 
     @DisplayName("비회원_글_조회_테스트")
@@ -74,11 +79,65 @@ class PostServiceTest {
 
         assertEquals(responseGetPost.isHasNext(), true);
     }
+
+    @DisplayName("글_좋아요_동시성_테스트")
+    @Test
+    void concurrent_of_post_like() throws InterruptedException {
+        Long postId = 1L;  // 테스트할 게시물 ID
+        Long memberId = 1L; // 기본 회원 ID
+        Member member = new Member();
+        member.setId(memberId);
+        Post post = postRepository.findById(postId).get();
+
+        int threadCount = 999;  // 동시에 실행할 스레드 개수
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            Long finalMemberId = memberId + i; // 각 스레드마다 다른 사용자 ID 부여
+            executorService.submit(() -> {
+                try {
+                    // 기존 로그를 sout으로 변경
+                    System.out.println(String.format("Thread %s started for postId: %d and memberId: %d",
+                            Thread.currentThread().getName(), postId, finalMemberId));
+
+                    postService.togglePostLike(postId, finalMemberId);
+
+                    // 기존 로그를 sout으로 변경
+                    System.out.println(String.format("Thread %s completed for postId: %d and memberId: %d",
+                            Thread.currentThread().getName(), postId, finalMemberId));
+
+                } catch (Exception e) {
+                    // 기존 로그를 sout으로 변경
+                    System.out.println(String.format("Error in thread %s: %s",
+                            Thread.currentThread().getName(), e.getMessage()));
+
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+        latch.await(); // 모든 스레드가 종료될 때까지 대기
+        executorService.shutdown();
+
+        long likeCount = post.getPost_like();
+        long storedLikes = postLikeRepository.countByPostId(post);
+
+        System.out.println("📌 게시글 ID: " + post.getPost_id());
+        System.out.println("✅ 저장된 좋아요 수: " + storedLikes);
+        System.out.println("✅ Post의 likeCount 필드 값: " + likeCount);
+
+        assertThat(likeCount)
+                .as("게시글 ID: " + post.getPost_id() + "의 좋아요 수가 다릅니다.")
+                .isEqualTo(storedLikes);
+    }
+
     private PostPostDto createDefaultPost(Member member) {
         PostPostDto postDto = new PostPostDto();
         List<String> hashTags = new ArrayList<>();
-        for(int i=0; i<2; i++)
-            hashTags.add("test"+i);
+        for (int i = 0; i < 2; i++) {
+            hashTags.add("test" + i);
+        }
         postDto.setHash_tag(hashTags);
         postDto.setPost_picture(0L);
         postDto.setContent("Test");

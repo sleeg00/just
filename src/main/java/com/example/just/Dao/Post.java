@@ -1,7 +1,7 @@
 package com.example.just.Dao;
 
-import com.example.just.Dto.PostPostDto;
-import com.example.just.Dto.PutPostDto;
+import com.example.just.Dto.Post.PostPostDto;
+import com.example.just.Dto.Post.PutPostDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,8 +16,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -29,6 +27,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
 
 @Entity
 @Table(name = "post")
@@ -42,9 +42,6 @@ public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long post_id;
-
-    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private PostContent postContent;
 
     @Column(name = "post_picture")
     private Long post_picture;
@@ -61,17 +58,12 @@ public class Post {
     @Column(name = "emoticon")
     private String emoticon;
 
+    @Column(name = "blamed_count")
+    private Long blamedCount;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "post_like",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "member_id")
-    )
     @JsonIgnore
-    @Builder.Default
-    private List<Member> likedMembers = new ArrayList<>();
-
+    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private PostContent postContent;
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     private List<HashTagMap> hashTagMaps = new ArrayList<>();
 
@@ -82,8 +74,6 @@ public class Post {
 
     @OneToMany(mappedBy = "post", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
-    @Column(name = "blamed_count")
-    private Long blamedCount;
 
 
     @PrePersist
@@ -117,21 +107,6 @@ public class Post {
         this.member.updateMember(this);
     }
 
-    public void addLike(Member member) {
-        if (!likedMembers.contains(member)) {
-            member.getLikedPosts().add(this);//좋아한 글 List에 해당 글의 객체 추가
-            post_like++;
-        }
-    }
-
-    public void removeLike(Member member) {
-        if (likedMembers.contains(member)) {
-            member.getLikedPosts().remove(this);
-            post_like--;
-        }
-    }
-
-
     public void addBlamed() {
         blamedCount++;
     }
@@ -160,5 +135,14 @@ public class Post {
 
     public void addHashTagMaps(HashTagMap hashTagMap) {
         this.hashTagMaps.add(hashTagMap);
+    }
+
+
+    public void updatePostLike() {
+        this.post_like++;
+    }
+
+    public void minusPostLike() {
+        this.post_like--;
     }
 }

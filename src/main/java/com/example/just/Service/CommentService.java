@@ -5,6 +5,7 @@ import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 import com.example.just.Document.PostDocument;
 import com.example.just.Dto.*;
+import com.example.just.Dto.Post.PutCommentDto;
 import com.example.just.Repository.CommentRepository;
 import com.example.just.Repository.MemberRepository;
 import com.example.just.Repository.PostContentESRespository;

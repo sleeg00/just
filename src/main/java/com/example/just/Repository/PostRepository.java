@@ -1,8 +1,10 @@
 package com.example.just.Repository;
 
 import com.example.just.Dao.Post;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,4 +16,7 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostCustomRep
 
     @Query("SELECT COUNT(p) FROM Post p")
     long countAllPosts();
+
+    @Query("SELECT p FROM Post p WHERE p.id = :post_id") // 비관전 락
+    Optional<Post> findByIdWithLock(@Param("post_id") Long post_id);
 }

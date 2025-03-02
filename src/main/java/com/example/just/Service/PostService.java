@@ -7,6 +7,7 @@ import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 
 
+import com.example.just.Dao.PostLike;
 import com.example.just.Dao.QBlame;
 import com.example.just.Dao.QComment;
 import com.example.just.Dao.QHashTag;
@@ -15,13 +16,14 @@ import com.example.just.Dao.QPost;
 import com.example.just.Dao.QPostContent;
 import com.example.just.Document.HashTagDocument;
 import com.example.just.Document.PostDocument;
-import com.example.just.Dto.PostPostDto;
-import com.example.just.Dto.PutPostDto;
+import com.example.just.Dto.Post.PostPostDto;
+import com.example.just.Dto.Post.PutPostDto;
 import com.example.just.Exception.NotFoundException;
 import com.example.just.Repository.BlameRepository;
 
 import com.example.just.Repository.HashTagESRepository;
 import com.example.just.Repository.PostContentRepository;
+import com.example.just.Repository.PostLikeRepository;
 import com.example.just.Response.ResponseGetMemberPostDto;
 import com.example.just.Response.ResponsePutPostDto;
 import com.example.just.Mapper.PostMapper;
@@ -46,7 +48,6 @@ import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 ;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
@@ -83,7 +84,8 @@ public class PostService {
     private JwtProvider jwtProvider;
     @Autowired
     private GptService gptService;
-
+    @Autowired
+    private PostLikeRepository postLikeRepository;
     @Autowired
     PostContentESRespository postContentESRespository;
 
@@ -137,18 +139,11 @@ public class PostService {
         return returnPost;
     }
 
+    public void deletePost(Post post) throws NotFoundException {
 
-    //글 삭제
-    public void deletePost(Long post_id) throws NotFoundException {
-        Post post = checkPost(post_id);
-        if (post == null) {
-            throw new NotFoundException();
-        } else {
-            // Elasticsearch에서 해당 포스트의 내용 삭제
-            postContentESRespository.deleteById(post_id);
-            deleteHashTag(post);
-            postRepository.deleteById(post_id);
-        }
+        postContentESRespository.deleteById(post.getPost_id());
+        deleteHashTag(post); // 이따 수정
+        postRepository.deleteById(post.getPost_id());
     }
 
     //글 수정
@@ -251,7 +246,8 @@ public class PostService {
         return responseGetPost;
     }
 
-    private List<ResponseGetMemberPostDto> createResponseGetMemberPostDto(List<Tuple> results,  @Nullable Long member_id) {
+    private List<ResponseGetMemberPostDto> createResponseGetMemberPostDto(List<Tuple> results,
+                                                                          @Nullable Long member_id) {
         List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
 
         for (Tuple tuple : results) {
@@ -292,32 +288,39 @@ public class PostService {
 
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<?> postLikes(Long post_id, Long member_id) throws NotFoundException {    //글 좋아요
 
+    public Post togglePostLike(Long post_id, Long member_id) {    //글 좋아요
         Member member = checkMember(member_id);
-        Post post = checkPost(post_id);
+        Post post = postRepository.findById(post_id)
+                .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."));
 
-        ResponsePost responsePost;
-        PostDocument postDocument = postContentESRespository.findById(post_id).get();
-        System.out.println("!");
-        if (post.getLikedMembers().contains(member)) {
-            System.out.println("?");
-            post.removeLike(member);
-            System.out.println("remove");
-            postDocument.setPostLikeSize(postDocument.getPostLikeSize() - 1);
-            responsePost = new ResponsePost(post_id, "좋아요 취소");
-        } else {
-            System.out.println("?");
-            post.addLike(member);
-            System.out.println("yes");
-            postDocument.setPostLikeSize(postDocument.getPostLikeSize() + 1);
-            responsePost = new ResponsePost(post_id, "좋아요 완료");
+        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member, post));
+
+        if (existingLike.isPresent()) {
+            throw new IllegalStateException("이미 좋아요를 누른 게시물입니다.");
         }
-        postContentESRespository.save(postDocument);
-        Post savePost = postRepository.save(post);
 
-        return ResponseEntity.ok(responsePost);
+        postLikeRepository.save(new PostLike(member, post));
+        Long post_count = postLikeRepository.countAllByPost(post);
+        post.setPost_like(post_count);
+        return postRepository.save(post);
+    }
+
+
+    public Post cancelPostLike(Long post_id, Long member_id) {
+        Member member = checkMember(member_id);
+        Post post = postRepository.findByIdWithLock(post_id)
+                .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."));
+
+        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPostWithLock(member, post));
+
+        if (!existingLike.isPresent()) {
+            throw new IllegalStateException("이미 좋아요를 취소한 게시물입니다.");
+        }
+        postLikeRepository.delete(existingLike.get());
+        post.minusPostLike();
+
+        return postRepository.save(post);
     }
 
     public ResponseGetPost searchByCursorMember(Long cursor, Long limit, Long member_id) throws NotFoundException {
@@ -397,40 +400,16 @@ public class PostService {
 
     }
 
-    public List<ResponseGetMemberPostDto> getMyPost(Long member_id) {
-        List<Tuple> posts = postRepository.getMemberPost(member_id);
+    public List<ResponseGetMemberPostDto> getMyPost(Member member) {
+        List<Tuple> posts = postRepository.getMemberPost(member.getId());
         // 조회된 결과가 없으면 예외 발생
         if (posts.isEmpty()) {
             throw new NotFoundException("해당 사용자의 게시글을 찾을 수 없습니다.");
         }
         List<ResponseGetMemberPostDto> getPostDtos;
-        getPostDtos = createResponseGetMemberPostDto(posts, member_id);
+        getPostDtos = createResponseGetMemberPostDto(posts, member.getId());
 
         return getPostDtos;
-    }
-
-
-    public List<ResponseGetMemberPostDto> getLikeMemberPost(Long member_id) throws NotFoundException {
-        Member member = checkMember(member_id); //존재한다면 객체 생성
-        List<Post> results = member.getLikedPosts();
-        // results를 최신 순으로 정렬
-        Collections.sort(results, Comparator.comparing(Post::getPost_create_time).reversed());
-        HashMap<Long, String> map = null;
-        List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(null, member_id);
-        return getPostDtos;
-    }
-
-
-    public String parsingJson(String json) {
-        String response;
-        try {
-            JSONParser parser = new JSONParser();
-            JSONObject elem = (JSONObject) parser.parse(json);
-            response = elem.get("convertedQuestion").toString();
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-        return response;
     }
 
     public void saveAllHashTagsToRedis() {
