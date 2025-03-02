@@ -1,4 +1,4 @@
-package com.example.just.Dto;
+package com.example.just.Dto.Post;
 
 import com.example.just.Dao.Comment;
 import com.example.just.Dao.HashTag;

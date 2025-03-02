@@ -58,9 +58,6 @@
       @JsonIgnore
       private List<Comment> comments = new ArrayList<>();
 
-      @Builder.Default
-      @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-      private List<Post> likedPosts = new ArrayList<>();
 
       @Builder.Default
       @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
@@ -92,7 +89,7 @@
           this.blamedCount = member.getBlamedCount();
           this.blameCount = member.getBlameCount();
           this.posts = member.getPosts();
-          this.likedPosts = member.getLikedPosts();
+
           this.notifications = member.getNotifications();
       }
 

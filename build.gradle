@@ -48,9 +48,13 @@ dependencies {
 	//Database
 	implementation 'mysql:mysql-connector-java:8.0.27'
 	runtimeOnly  'mysql:mysql-connector-java:8.0.27'
-	implementation 'com.h2database:h2'
-	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
-	runtimeOnly 'com.h2database:h2'
+
+
+
+
+	implementation 'org.slf4j:slf4j-api:1.7.32' // 최신 버전으로 변경 가능
+	implementation 'ch.qos.logback:logback-classic:1.2.6' // 최신 버전으로 변경 가능
+
 
 
 	//Lombok
@@ -58,12 +62,11 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testCompileOnly("org.projectlombok:lombok")
 	testAnnotationProcessor('org.projectlombok:lombok')
-	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
 	//Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.junit.platform:junit-platform-launcher:1.5.2'
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.5.2'
-	testImplementation 'com.h2database:h2'
 
 	//jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
