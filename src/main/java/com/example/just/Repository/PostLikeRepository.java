@@ -4,7 +4,9 @@ import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 import com.example.just.Dao.PostLike;
 import io.lettuce.core.dynamic.annotation.Param;
+import javax.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Repository;
 public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     PostLike findByMemberAndPost(Member member, Post post);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT pl FROM PostLike pl WHERE pl.member = :member AND pl.post = :post")
     PostLike findByMemberAndPostWithLock(@Param("member") Member member,
                                                    @Param("post") Post post);

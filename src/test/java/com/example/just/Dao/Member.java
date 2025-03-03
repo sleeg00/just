@@ -62,6 +62,11 @@
       @Builder.Default
       @ManyToMany(mappedBy = "likedMembers", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
       private List<Comment> likedComments = new ArrayList<>();
+
+      public Member(long id) {
+          this.id=id;
+      }
+
       public void addBlamed(){
           blamedCount++;
       }
@@ -89,7 +94,6 @@
           this.blamedCount = member.getBlamedCount();
           this.blameCount = member.getBlameCount();
           this.posts = member.getPosts();
-
           this.notifications = member.getNotifications();
       }
 
