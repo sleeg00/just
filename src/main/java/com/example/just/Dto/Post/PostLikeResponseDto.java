@@ -7,8 +7,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class PostLikeResponseDto {
-    private Long postId;
-    private Long likeCount;
+    private Long post_id;
+    private Long post_like;
 
     public static PostLikeResponseDto fromEntity(Post post) {
         return new PostLikeResponseDto(post.getPost_id(), post.getPost_like());
