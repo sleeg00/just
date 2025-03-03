@@ -142,6 +142,9 @@ public class Post {
         this.post_like++;
     }
 
+    public Long getId() {
+        return this.post_id;
+    }
     public void minusPostLike() {
         this.post_like--;
     }

@@ -293,15 +293,14 @@ public class PostService {
         Post post = postRepository.findByIdWithLock(post_id)
                 .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."));
 
-        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPostWithLock(member, post));
+        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member, post));
 
         if (existingLike.isPresent()) {
             throw new IllegalStateException("이미 좋아요를 누른 게시물입니다.");
         }
 
         postLikeRepository.save(new PostLike(member, post));
-        Long post_count = postLikeRepository.countAllByPost(post);
-        post.setPost_like(post_count);
+        post.setPost_like(post.getPost_like()+1);
         return postRepository.save(post);
     }
 
@@ -309,10 +308,10 @@ public class PostService {
     @Transactional
     public Post cancelPostLike(Long post_id, Long member_id) {
         Member member = checkMember(member_id);
-        Post post = postRepository.findByIdWithLock(post_id)
+        Post post = postRepository.findById(post_id)
                 .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."));
 
-        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPostWithLock(member, post));
+        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member, post));
 
         if (!existingLike.isPresent()) {
             throw new IllegalStateException("이미 좋아요를 취소한 게시물입니다.");
