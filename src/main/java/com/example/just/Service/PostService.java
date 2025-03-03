@@ -105,8 +105,6 @@ public class PostService {
 
     //@Transactional(readOnly = true)
     public Member checkMember(Long member_id) {
-        System.out.println(
-                "Transaction ReadOnly Second: " + TransactionSynchronizationManager.isCurrentTransactionReadOnly());
         Optional<Member> optionalMember = memberRepository.findById(member_id);
         if (!optionalMember.isPresent()) {  //아이디 없을시 예외처리
             throw new NoSuchElementException("DB에 존재하지 않는 ID : " + member_id);
@@ -289,12 +287,13 @@ public class PostService {
     }
 
 
+    @Transactional
     public Post togglePostLike(Long post_id, Long member_id) {    //글 좋아요
         Member member = checkMember(member_id);
-        Post post = postRepository.findById(post_id)
+        Post post = postRepository.findByIdWithLock(post_id)
                 .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."));
 
-        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member, post));
+        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPostWithLock(member, post));
 
         if (existingLike.isPresent()) {
             throw new IllegalStateException("이미 좋아요를 누른 게시물입니다.");
@@ -307,6 +306,7 @@ public class PostService {
     }
 
 
+    @Transactional
     public Post cancelPostLike(Long post_id, Long member_id) {
         Member member = checkMember(member_id);
         Post post = postRepository.findByIdWithLock(post_id)
