@@ -1,0 +1,148 @@
+package com.example.just.Dao;
+
+import com.example.just.Dto.Post.PostPostDto;
+import com.example.just.Dto.Post.PutPostDto;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
+
+@Entity
+@Table(name = "post")
+@NoArgsConstructor
+@Getter
+@AllArgsConstructor
+@Builder
+@Data
+@Setter
+public class Post {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long post_id;
+
+    @Column(name = "post_picture")
+    private Long post_picture;
+
+    @Column(name = "post_create_time")  //글 생성 시간
+    private Long post_create_time;
+
+    @Column(name = "post_like")
+    private Long post_like;
+
+    @Column(name = "secret")
+    private boolean secret;
+
+    @Column(name = "emoticon")
+    private String emoticon;
+
+    @Column(name = "blamed_count")
+    private Long blamedCount;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private PostContent postContent;
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    private List<HashTagMap> hashTagMaps = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY) // 원하지 않는 데이터를 가져오지 않기 위해 LAZY로 설정
+    @JoinColumn(name = "member_id") //글을쓴 Member_id
+    @JsonIgnore
+    private Member member;
+
+    @OneToMany(mappedBy = "post", orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Comment> comments = new ArrayList<>();
+
+
+    @PrePersist
+    public void prePersist() {
+        this.post_like = this.post_like == null ? 0L : this.post_like;
+        this.emoticon = this.emoticon == null ? "0" : this.emoticon;
+    }
+
+    public Post writePost(PostPostDto postDto, Member member) {
+        PostContent postContent1 = new PostContent();
+        postContent1.setContent(postDto.getContent());
+        this.postContent = postContent1;
+        postContent1.setPost(this);
+        this.post_picture = postDto.getPost_picture();
+        this.secret = postDto.getSecret();
+        this.emoticon = "";
+        this.post_like = 0L;
+        this.member = member;
+        this.blamedCount = 0L;
+        this.post_create_time = Long.valueOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+        return this;
+    }
+
+    public void updatePost(String post_tag, Long post_like, Long post_create_time,
+                           boolean secret, String emoticon, String post_category, Member member) {
+        this.post_like = post_like;
+        this.post_create_time = post_create_time;
+        this.secret = secret;
+        this.emoticon = emoticon;
+        this.member = member;
+        this.member.updateMember(this);
+    }
+
+    public void addBlamed() {
+        blamedCount++;
+    }
+
+
+    public boolean getSecret() {
+        return this.secret;
+    }
+
+    public void changePost(PutPostDto postDto, Member member, Post post) {
+        this.post_id = post.getPost_id();
+        this.member = member;
+        this.setPost_create_time(new Date(System.currentTimeMillis()).getTime());
+        this.setPost_like(post.getPost_like());
+        this.post_picture = postDto.getPost_picture();
+        this.secret = postDto.getSecret();
+        this.postContent = postDto.getPost_content();
+        this.hashTagMaps = new ArrayList<>();
+        for (int i = 0; i < postDto.getHash_tage().size(); i++) {
+            HashTagMap hashTagMap = new HashTagMap();
+            hashTagMap.setPost(this);
+            hashTagMap.setHashTag(new HashTag(postDto.getHash_tage().get(i)));
+            this.addHashTagMaps(hashTagMap);
+        }
+    }
+
+    public void addHashTagMaps(HashTagMap hashTagMap) {
+        this.hashTagMaps.add(hashTagMap);
+    }
+
+
+    public void updatePostLike() {
+        this.post_like++;
+    }
+
+    public void minusPostLike() {
+        this.post_like--;
+    }
+}

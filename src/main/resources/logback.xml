@@ -11,10 +11,10 @@
     <!-- JDBC 관련 로그 설정✨ -->
     <logger name="jdbc" level="OFF"/> <!-- JDBC 호출에 대한 로그를 출력하지 않음 -->
     <logger name="jdbc.sqlonly" level="OFF"/> <!-- SQL문만 로그로 남기기 (OFF로 설정되어 출력되지 않음) -->
-    <logger name="jdbc.sqltiming" level="DEBUG"/> <!-- SQL문 및 실행 시간 로그 (DEBUG 레벨로 설정) -->
+    <logger name="jdbc.sqltiming" level="OFF"/> <!-- SQL문 및 실행 시간 로그 (DEBUG 레벨로 설정) -->
     <logger name="jdbc.audit" level="OFF"/> <!-- JDBC 호출 정보 로그 (OFF로 설정되어 출력되지 않음) -->
     <logger name="jdbc.resultset" level="OFF"/> <!-- ResultSet 포함 JDBC 호출 로그 (OFF로 설정되어 출력되지 않음) -->
-    <logger name="jdbc.resultsettable" level="DEBUG"/> <!-- SQL 결과 조회 데이터 로그 (DEBUG 레벨로 설정) -->
+    <logger name="jdbc.resultsettable" level="OFF"/> <!-- SQL 결과 조회 데이터 로그 (DEBUG 레벨로 설정) -->
     <logger name="jdbc.connection" level="OFF"/> <!-- JDBC 연결 로그 (OFF로 설정되어 출력되지 않음) -->
 
     <!-- 루트 로거 설정: 기본 로그 레벨은 INFO -->

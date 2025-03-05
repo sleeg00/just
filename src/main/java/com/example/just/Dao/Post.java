@@ -1,17 +1,34 @@
 package com.example.just.Dao;
 
-import com.example.just.Dto.PostPostDto;
-import com.example.just.Dto.PutPostDto;
+import com.example.just.Dto.Post.PostPostDto;
+import com.example.just.Dto.Post.PutPostDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.Date;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
 
 @Entity
 @Table(name = "post")
@@ -25,9 +42,6 @@ public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long post_id;
-
-    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private PostContent postContent;
 
     @Column(name = "post_picture")
     private Long post_picture;
@@ -44,17 +58,12 @@ public class Post {
     @Column(name = "emoticon")
     private String emoticon;
 
+    @Column(name = "blamed_count")
+    private Long blamedCount;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "post_like",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "member_id")
-    )
     @JsonIgnore
-    @Builder.Default
-    private List<Member> likedMembers = new ArrayList<>();
-
+    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private PostContent postContent;
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     private List<HashTagMap> hashTagMaps = new ArrayList<>();
 
@@ -65,8 +74,6 @@ public class Post {
 
     @OneToMany(mappedBy = "post", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
-    @Column(name = "blamed_count")
-    private Long blamedCount;
 
 
     @PrePersist
@@ -75,12 +82,10 @@ public class Post {
         this.emoticon = this.emoticon == null ? "0" : this.emoticon;
     }
 
-    public void writePost(PostPostDto postDto, Member member) {
+    public Post writePost(PostPostDto postDto, Member member) {
         PostContent postContent1 = new PostContent();
         postContent1.setContent(postDto.getContent());
         this.postContent = postContent1;
-
-        // postContent 객체에 post를 설정
         postContent1.setPost(this);
         this.post_picture = postDto.getPost_picture();
         this.secret = postDto.getSecret();
@@ -88,6 +93,8 @@ public class Post {
         this.post_like = 0L;
         this.member = member;
         this.blamedCount = 0L;
+        this.post_create_time = Long.valueOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+        return this;
     }
 
     public void updatePost(String post_tag, Long post_like, Long post_create_time,
@@ -99,21 +106,6 @@ public class Post {
         this.member = member;
         this.member.updateMember(this);
     }
-
-    public void addLike(Member member) {
-        if (!likedMembers.contains(member)) {
-            member.getLikedPosts().add(this);//좋아한 글 List에 해당 글의 객체 추가
-            post_like++;
-        }
-    }
-
-    public void removeLike(Member member) {
-        if (likedMembers.contains(member)) {
-            member.getLikedPosts().remove(this);
-            post_like--;
-        }
-    }
-
 
     public void addBlamed() {
         blamedCount++;
@@ -141,17 +133,19 @@ public class Post {
         }
     }
 
-    public List<HashTag> getHashTag() {
-        List<HashTag> array = new ArrayList<>();
-
-
-
-
-        return array;
+    public void addHashTagMaps(HashTagMap hashTagMap) {
+        this.hashTagMaps.add(hashTagMap);
     }
 
 
-    public void addHashTagMaps(HashTagMap hashTagMap) {
-        this.hashTagMaps.add(hashTagMap);
+    public void updatePostLike() {
+        this.post_like++;
+    }
+
+    public Long getId() {
+        return this.post_id;
+    }
+    public void minusPostLike() {
+        this.post_like--;
     }
 }

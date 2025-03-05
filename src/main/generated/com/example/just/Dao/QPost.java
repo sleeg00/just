@@ -30,8 +30,6 @@ public class QPost extends EntityPathBase<Post> {
 
     public final ListPath<HashTagMap, QHashTagMap> hashTagMaps = this.<HashTagMap, QHashTagMap>createList("hashTagMaps", HashTagMap.class, QHashTagMap.class, PathInits.DIRECT2);
 
-    public final ListPath<Member, QMember> likedMembers = this.<Member, QMember>createList("likedMembers", Member.class, QMember.class, PathInits.DIRECT2);
-
     public final QMember member;
 
     public final NumberPath<Long> post_create_time = createNumber("post_create_time", Long.class);
