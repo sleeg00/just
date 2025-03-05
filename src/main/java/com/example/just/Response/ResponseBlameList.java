@@ -1,6 +1,6 @@
 package com.example.just.Response;
 
-import com.example.just.Dao.Blame;
+
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

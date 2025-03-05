@@ -17,7 +17,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
 import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Arrays;

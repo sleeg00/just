@@ -2,6 +2,13 @@ package com.example.just.Document;
 
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -13,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+
+
 
 @Document(indexName = "tags")
 @Getter

@@ -8,22 +8,28 @@ import com.example.just.Dao.Post;
 
 
 import com.example.just.Dao.PostLike;
-import com.example.just.Dao.QBlame;
-import com.example.just.Dao.QComment;
+
+
 import com.example.just.Dao.QHashTag;
-import com.example.just.Dao.QHashTagMap;
 import com.example.just.Dao.QPost;
-import com.example.just.Dao.QPostContent;
 import com.example.just.Document.HashTagDocument;
 import com.example.just.Document.PostDocument;
+
 import com.example.just.Dto.Post.PostPostDto;
 import com.example.just.Dto.Post.PutPostDto;
+
+
 import com.example.just.Exception.NotFoundException;
 import com.example.just.Repository.BlameRepository;
 
 import com.example.just.Repository.HashTagESRepository;
+
 import com.example.just.Repository.PostContentRepository;
 import com.example.just.Repository.PostLikeRepository;
+
+import com.example.just.Repository.HashTagMapRepository;
+import com.example.just.Repository.PostContentRepository;
+
 import com.example.just.Response.ResponseGetMemberPostDto;
 import com.example.just.Response.ResponsePutPostDto;
 import com.example.just.Mapper.PostMapper;
@@ -33,7 +39,9 @@ import com.example.just.Repository.PostContentESRespository;
 import com.example.just.Repository.PostRepository;
 
 import com.example.just.jwt.JwtProvider;
+
 import com.google.firebase.database.annotations.Nullable;
+
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -48,6 +56,8 @@ import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 ;
 import org.springframework.data.redis.core.RedisTemplate;
+
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
@@ -84,6 +94,7 @@ public class PostService {
     private JwtProvider jwtProvider;
     @Autowired
     private GptService gptService;
+
     @Autowired
     private PostLikeRepository postLikeRepository;
     @Autowired
@@ -91,6 +102,10 @@ public class PostService {
 
     @Autowired
     private HashTagService hashTagService;
+
+    @Autowired
+    private HashTagMapRepository hashTagMapRepository;
+
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -140,7 +155,7 @@ public class PostService {
     public void deletePost(Post post) throws NotFoundException {
 
         postContentESRespository.deleteById(post.getPost_id());
-        deleteHashTag(post); // 이따 수정
+       // deleteHashTag(post); // 이따 수정
         postRepository.deleteById(post.getPost_id());
     }
 
@@ -151,7 +166,7 @@ public class PostService {
         Post checkPost = checkPost(post_id);
         List<HashTagMap> hashTagMaps = checkPost.getHashTagMaps();
 
-        deleteHashTag(checkPost);
+       // deleteHashTag(checkPost);
 
         postDto.setPost_content(postDto.getPost_content());
 
@@ -164,24 +179,6 @@ public class PostService {
 
         ResponsePutPostDto responsePutPostDto = new ResponsePutPostDto(p);
         return responsePutPostDto;
-    }
-
-    private void deleteHashTag(Post post) {
-        List<HashTagMap> hashTagMaps = post.getHashTagMaps();
-        for (int i = 0; i < hashTagMaps.size(); i++) {
-            hashTagRepository.findById(hashTagMaps.get(i).getHashTag().getId())
-                    .ifPresent(
-                            hashTag -> {
-                                if (hashTag.getTagCount() != 1) {
-                                    hashTag.setTagCount(hashTag.getTagCount() - 1);
-                                    hashTagESRepository.save(new HashTagDocument(hashTag));
-                                    hashTagRepository.save(hashTag);
-                                } else {
-                                    hashTagESRepository.deleteById(hashTag.getId());
-                                    hashTagRepository.deleteById(hashTag.getId());
-                                }
-                            });
-        }
     }
 
     public List<Post> getAllPostList() {
@@ -202,6 +199,87 @@ public class PostService {
         }
 
         List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(posts, null);
+        return (ResponseGetPost) getPostDtos;
+    }
+
+
+    private void saveHashTag(List<String> hashTags, Post p) { // Redis
+        for (int i = 0; i < hashTags.size(); i++) {
+            HashTag hashTag = findTag(hashTags, i);
+            HashTagMap hashTagMap = new HashTagMap();
+            if (hashTag == null) {
+                HashTag newHashTag = new HashTag(hashTags.get(i));
+                newHashTag.setTagCount(1L);
+                newHashTag = hashTagRepository.save(newHashTag);
+                hashTagESRepository.save(new HashTagDocument(newHashTag));
+                hashTagMap = new HashTagMap(newHashTag, p); //객체 그래프 설정
+            } else {
+                hashTag.setTagCount(hashTag.getTagCount() + 1);
+                hashTagRepository.save(hashTag);
+                hashTagESRepository.save(new HashTagDocument(hashTag));
+                hashTagMap = new HashTagMap(hashTag, p); //객체 그래프 설정
+            }
+            hashTagMapRepository.save(hashTagMap);
+        }
+    }
+
+    @Transactional(readOnly = false)
+    private HashTag findTag(List<String> hashTags, int i) {
+        return hashTagRepository.findByName(hashTags.get(i));
+    }
+
+
+    //글 삭제
+    public void deletePost(Long post_id) throws NotFoundException {
+        Post post = checkPost(post_id);
+        if (post == null) {
+            throw new NotFoundException();
+        } else {
+            // Elasticsearch에서 해당 포스트의 내용 삭제
+            postContentESRespository.deleteById(post_id);
+            deleteHashTag(post);
+            postRepository.deleteById(post_id);
+        }
+    }
+
+    //글 수정
+
+
+    private void deleteHashTag(Post post) {
+        List<HashTagMap> hashTagMaps = post.getHashTagMaps();
+        for (int i = 0; i < hashTagMaps.size(); i++) {
+            hashTagRepository.findById(hashTagMaps.get(i).getHashTag().getId())
+                    .ifPresent(
+                            hashTag -> {
+                                if (hashTag.getTagCount() != 1) {
+                                    hashTag.setTagCount(hashTag.getTagCount() - 1);
+                                    hashTagESRepository.save(new HashTagDocument(hashTag));
+                                    hashTagRepository.save(hashTag);
+                                } else {
+                                    hashTagESRepository.deleteById(hashTag.getId());
+                                    hashTagRepository.deleteById(hashTag.getId());
+                                }
+                            });
+        }
+    }
+
+
+
+
+    public ResponseGetPost searchByCursor(Long cursor, Long limit, Long member_id)
+            throws NotFoundException, SQLException { //글 조
+        // Querydsl Impl 생성후 PostRepository 상속
+        List<Tuple> posts = postRepository.findPostsByCursor(cursor, limit);
+
+        boolean hasNext = posts.size() > limit;
+        if (!posts.isEmpty() && hasNext) {
+            posts.remove(posts.size() - 1);
+        } else {
+            throw new NoSuchElementException("마지막 페이지입니다.");
+        }
+
+        List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(posts, member_id);
+
         return resultPostIds(posts, getPostDtos, hasNext);
     }
 
@@ -244,8 +322,10 @@ public class PostService {
         return responseGetPost;
     }
 
+
     private List<ResponseGetMemberPostDto> createResponseGetMemberPostDto(List<Tuple> results,
                                                                           @Nullable Long member_id) {
+
         List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
 
         for (Tuple tuple : results) {
@@ -264,6 +344,7 @@ public class PostService {
                 dto.setHash_tag(hashTag.getName());
             }
             // 회원 ID 비교 (게시글 작성자와 현재 요청한 회원)
+
             if (member_id != null) {
                 dto.setMine(post.getMember().getId().equals(member_id));
             }
@@ -300,7 +381,7 @@ public class PostService {
         }
 
         postLikeRepository.save(new PostLike(member, post));
-        post.setPost_like(post.getPost_like()+1);
+        post.setPost_like(post.getPost_like() + 1);
         return postRepository.save(post);
     }
 
@@ -322,106 +403,5 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    public ResponseGetPost searchByCursorMember(Long cursor, Long limit, Long member_id) throws NotFoundException {
-        QPost post = QPost.post;
-        QBlame blame = QBlame.blame;
-        QHashTagMap hashTagMaps = QHashTagMap.hashTagMap;
-        QHashTag hashTag = QHashTag.hashTag;
-        QPostContent postContent = QPostContent.postContent;
-        Set<Long> viewedPostIds = new HashSet<>();
 
-        Member realMember = checkMember(member_id);
-
-        List<Tuple> blames = query.select(blame.targetPostId, blame.targetMemberId)
-                .from(blame)
-                .where(blame.blameMemberId.eq(realMember.getId()))
-                .fetch();
-        // 결과를 가져와서 리스트로 변환
-        List<Long> targetPostIds = new ArrayList<>();
-        List<Long> targetMemberIds = new ArrayList<>();
-        for (Tuple tuple : blames) {
-            if (tuple.get(blame.targetPostId) == null) {
-                targetPostIds.add(tuple.get(blame.targetPostId));
-            }
-            if (tuple.get(blame.targetMemberId) == null) {
-                targetMemberIds.add(tuple.get(blame.targetMemberId));
-            }
-        }
-
-        JPAQuery<Post> postHashTagsQuery = query.select(post)
-                .from(post)
-                .leftJoin(post.hashTagMaps, QHashTagMap.hashTagMap).fetchJoin()
-                .leftJoin(hashTagMaps.hashTag, hashTag).fetchJoin()
-                .leftJoin(post.postContent, postContent).fetchJoin()
-                .where(post.post_id.notIn(viewedPostIds),
-                        post.post_create_time.isNotNull(),
-                        post.post_id.notIn(targetPostIds),
-                        post.member.id.notIn(targetMemberIds),
-                        QHashTagMap.hashTagMap.post.post_id.eq(post.post_id),
-                        QHashTagMap.hashTagMap.hashTag.id.eq(hashTag.id),
-                        postContent.post.post_id.eq(post.post_id))
-                .orderBy(Expressions.numberTemplate(Double.class, "function('rand')").asc())
-                .limit(limit);
-
-        List<Post> postsWithHashTags = postHashTagsQuery.fetch();
-
-        List<Long> postIds = postsWithHashTags.stream()
-                .map(Post::getPost_id)
-                .collect(Collectors.toList());
-
-        JPAQuery<Post> postCommentsQuery = query.select(post)
-                .from(post)
-                .leftJoin(post.comments, QComment.comment).fetchJoin()
-                .where(post.post_id.in(postIds),
-                        QComment.comment.post.post_id.in(postIds));
-        List<Post> postsWithComments = postCommentsQuery.fetch();
-        Map<Long, Post> postMap = postsWithHashTags.stream()
-                .collect(Collectors.toMap(Post::getPost_id, Function.identity()));
-        int i = 0;
-        for (Post postMapValue : postMap.values()) {
-            if (postsWithComments.size() == 0) {
-                postMapValue.setComments(Collections.emptyList());
-            } else {
-                postMapValue.setComments(postsWithComments.get(i++).getComments());
-            }
-        }
-        List<Tuple> results = null;
-
-        List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
-        if (results.size() == 0) {
-            throw new NotFoundException();
-        } else {
-            HashMap<Long, String> map = null;
-            getPostDtos = createResponseGetMemberPostDto(results, member_id);
-            // 가져온 글들의 ID를 저장합니다.
-            return resultPostIds(results, getPostDtos, true);
-        }
-
-    }
-
-    public List<ResponseGetMemberPostDto> getMyPost(Member member) {
-        List<Tuple> posts = postRepository.getMemberPost(member.getId());
-        // 조회된 결과가 없으면 예외 발생
-        if (posts.isEmpty()) {
-            throw new NotFoundException("해당 사용자의 게시글을 찾을 수 없습니다.");
-        }
-        List<ResponseGetMemberPostDto> getPostDtos;
-        getPostDtos = createResponseGetMemberPostDto(posts, member.getId());
-
-        return getPostDtos;
-    }
-
-    public void saveAllHashTagsToRedis() {
-        // MySQL에서 모든 HashTag 데이터를 조회
-        List<HashTag> hashTags = hashTagRepository.findAll();
-
-        for (HashTag hashTag : hashTags) {
-            // Redis Key는 hash_tag_id로 설정
-            String key = redisKey + hashTag.getId();
-
-            // Redis에 저장 (name, tag_count)
-            redisTemplate.opsForHash().put(key, "name", hashTag.getName());
-            redisTemplate.opsForHash().put(key, "tag_count", hashTag.getTagCount().toString());
-        }
-    }
 }
