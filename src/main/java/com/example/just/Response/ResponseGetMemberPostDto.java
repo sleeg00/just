@@ -1,5 +1,6 @@
 package com.example.just.Response;
 
+
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Post;
 import com.example.just.Dao.PostContent;
@@ -46,7 +47,7 @@ public class ResponseGetMemberPostDto {
         this.hash_tag = hashTagMaps.get(0).getHashTag().getName();
         this.post_create_time = results.get(i).getPost_create_time();
         this.blamed_count = results.get(i).getBlamedCount();
-        this.secret = results.get(i).getSecret();
+        this.secret = false;
         this.post_like_size = results.get(i).getPost_like();
         this.comment_size = ((long) results.get(i).getComments().size());
         if (member_id != -1) {

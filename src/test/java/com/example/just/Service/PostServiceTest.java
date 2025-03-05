@@ -9,6 +9,7 @@ import com.example.just.Exception.NotFoundException;
 import com.example.just.Repository.MemberRepository;
 import com.example.just.Repository.PostLikeRepository;
 import com.example.just.Repository.PostRepository;
+import com.example.just.Service.PostService;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -130,3 +131,4 @@ class PostServiceTest {
         return postDto;
     }
 }
+

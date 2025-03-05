@@ -54,25 +54,21 @@ public class PostController {
         }
     }
 
-    @GetMapping("/redis")
-    public void redis() throws NotFoundException {
-        postService.saveAllHashTagsToRedis();
-    }
 
-    @Operation(summary = "자기의 게시글을 조회하는 API", description = "<big> 자신의 게시글을 조회한다</big>")
-    @GetMapping("/my")
-    public ResponseEntity<Object> getMyPosts(@ExtractMember Member member) throws NotFoundException {
-        return ResponseEntity.ok(postService.getMyPost(member));
-    }
-
-
-    @Operation(summary = "게시글 랜덤하게 조회(회원용) api", description = "자기가 좋아요한 글을 조회했다면"
-            + "\n like : true 아니라면 like : false 이다.")
-    @GetMapping("/member")
-    public ResponseEntity<Object> getMemberPosts(@ExtractMember Member member, @RequestParam Long cursor,
-                                                 @RequestParam(defaultValue = "30") Long size) {
-        return ResponseEntity.ok(postService.searchByCursorMember(cursor, size, member.getId()));
-    }
+//    @Operation(summary = "자기의 게시글을 조회하는 API", description = "<big> 자신의 게시글을 조회한다</big>")
+//    @GetMapping("/my")
+//    public ResponseEntity<Object> getMyPosts(@ExtractMember Member member) throws NotFoundException {
+//        return ResponseEntity.ok(postService.getMyPost(member));
+//    }
+//
+//
+//    @Operation(summary = "게시글 랜덤하게 조회(회원용) api", description = "자기가 좋아요한 글을 조회했다면"
+//            + "\n like : true 아니라면 like : false 이다.")
+//    @GetMapping("/member")
+//    public ResponseEntity<Object> getMemberPosts(@ExtractMember Member member, @RequestParam Long cursor,
+//                                                 @RequestParam(defaultValue = "30") Long size) {
+//        return ResponseEntity.ok(postService.searchByCursorMember(cursor, size, member.getId()));
+//    }
 
     @Operation(summary = "게시글 작성 API", description = "게시글을 작성합니다.")
     @PostMapping("")
@@ -100,7 +96,7 @@ public class PostController {
     @Operation(summary = "게시글 좋아요 api")
     @PostMapping("/likes")
     public ResponseEntity<?> togglePostLike(@RequestParam Long post_id,
-                                                              @RequestParam Long liker_id) {
+                                            @RequestParam Long liker_id) {
         Post updatePost = postService.togglePostLike(post_id, liker_id);
         return ResponseEntity.ok(updatePost);
     }

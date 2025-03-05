@@ -1,7 +1,5 @@
 package com.example.just.Repository;
 import com.example.just.Document.PostDocument;
-
-
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
