@@ -11,7 +11,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @EnableCaching
 public class JustApplication {
 
-
 	@Bean
 	public BCryptPasswordEncoder encoder(){
 		return new BCryptPasswordEncoder();
@@ -19,9 +18,7 @@ public class JustApplication {
 	static {
 		System.setProperty("com.amazonaws.sdk.disableEc2Metadata", "true");
 	}
-
 	public static void main(String[] args) {
-
 		SpringApplication.run(JustApplication.class, args);
 	}
 
