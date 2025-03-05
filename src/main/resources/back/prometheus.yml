@@ -14,4 +14,3 @@ scrape_configs:
       - targets:
           - "3.38.113.85:9104"
 
-
