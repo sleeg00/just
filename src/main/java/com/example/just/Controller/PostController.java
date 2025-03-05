@@ -1,8 +1,14 @@
 package com.example.just.Controller;
 
 
+import com.example.just.Resolver.ExtractMember;
+import com.example.just.Resolver.ExtractPost;
 import com.example.just.Dao.Member;
-import com.example.just.Dto.*;
+import com.example.just.Dao.Post;
+import com.example.just.Dto.Post.PostLikeResponseDto;
+import com.example.just.Dto.Post.PostPostDto;
+import com.example.just.Dto.Post.PutPostDto;
+import com.example.just.Repository.MemberRepository;
 import com.example.just.Service.PostService;
 import com.example.just.jwt.JwtProvider;
 import io.swagger.annotations.Api;
@@ -12,14 +18,14 @@ import java.sql.SQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
 
-@RequestMapping("/api")
+@RequestMapping("/api/posts")
 @Api(tags = {"post controller"}, description = "게시글 관련 api")
 @RestController
 public class PostController {
@@ -29,74 +35,54 @@ public class PostController {
 
     @Autowired
     JwtProvider jwtProvider;
+    @Autowired
+    private MemberRepository memberRepository;
 
 
-    @Operation(summary = "게시글 랜덤하게 조회 api(비회원용)", description = "<big>게시글을 조회한다</big>" +
-            "랜덤하고 중복되지않게 viewed(이미 읽은 글)라는 헤더에 [1, 2, 3] <-set형식 을 프론트에서 넘겨줘야함" +
-            " 백에서 넘겨주니까 로컬스토리지에 저장해놓고 넘겨주면 됨\n 자기 글이 조회되면  true")
-    @GetMapping("/get/post")
-    //@Transactional(readOnly = true)
-    public ResponseEntity<Object> getPosts(@RequestParam Long request_page, @RequestParam Long cursor)
-            throws NotFoundException {
+    @Operation(
+            summary = "비회원용 최근 게시글 조회",
+            description = "cursor(기준 시간)를 바탕으로 최근 게시글을 조회합니다."
+    )
+    @GetMapping("/recent")
+    public ResponseEntity<?> getRecentPosts(
+            @RequestParam Long cursor,
+            @RequestParam(defaultValue = "30") Long size) throws NotFoundException {
         try {
-            return ResponseEntity.ok(postService.searchByCursor(cursor, request_page, -1L));
+            return ResponseEntity.ok(postService.searchByCursor(cursor, size));
         } catch (SQLException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    @GetMapping("/redis")
-    public void redis() throws NotFoundException {
-        postService.saveAllHashTagsToRedis();
+
+//    @Operation(summary = "자기의 게시글을 조회하는 API", description = "<big> 자신의 게시글을 조회한다</big>")
+//    @GetMapping("/my")
+//    public ResponseEntity<Object> getMyPosts(@ExtractMember Member member) throws NotFoundException {
+//        return ResponseEntity.ok(postService.getMyPost(member));
+//    }
+//
+//
+//    @Operation(summary = "게시글 랜덤하게 조회(회원용) api", description = "자기가 좋아요한 글을 조회했다면"
+//            + "\n like : true 아니라면 like : false 이다.")
+//    @GetMapping("/member")
+//    public ResponseEntity<Object> getMemberPosts(@ExtractMember Member member, @RequestParam Long cursor,
+//                                                 @RequestParam(defaultValue = "30") Long size) {
+//        return ResponseEntity.ok(postService.searchByCursorMember(cursor, size, member.getId()));
+//    }
+
+    @Operation(summary = "게시글 작성 API", description = "게시글을 작성합니다.")
+    @PostMapping("")
+    public ResponseEntity<Post> write(@ExtractMember Member member, @RequestBody PostPostDto postDto) {
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.write(member, postDto));
     }
 
-    @Operation(summary = "자기의 게시글을 조회하는 API", description = "<big> 자신의 게시글을 조회한다</big>")
-    @GetMapping("/get/mypost")
-    public ResponseEntity<Object> getMyPosts(HttpServletRequest request) throws NotFoundException {
-        Long member_id = getAccessTokenOfMemberId(request);
-        return ResponseEntity.ok(postService.getMyPost(member_id));
-    }
 
-
-    @Operation(summary = "게시글 랜덤하게 조회(회원용) api", description = "자기가 좋아요한 글을 조회했다면"
-            + "\n like : true 아니라면 like : false 이다.")
-    @GetMapping("/get/member/post")
-    public ResponseEntity<Object> getMemberPosts(@RequestParam Long request_page, HttpServletRequest request) {
-        String cursor = request.getHeader("viewed");
-        Long member_id = getAccessTokenOfMemberId(request);
-
-        return ResponseEntity.ok(postService.searchByCursorMember(cursor, request_page, member_id));
-    }
-
-    @Operation(summary = "게시글 작성 api", description = "{\n"
-            + "  \"hash_tage\": [\n"
-            + "    \"바보\", \"멍청이\""
-            + "  ],\n"
-            + "  \"post_content\": [\n"
-            + "    \"오늘은 2월 8일 입니다.\", \"내일은 휴가입니다."
-            + "  ],\n"
-            + "  \"post_picture\": 0,\n"
-            + "  \"secret\": true\n"
-            + "}"
-            + "이런식으로 작성하면 됩니다.")
-    @PostMapping("/post/post")
-    public PostPostDto write(@RequestParam Long member_id,
-                             @RequestBody PostPostDto postDto) {
-        Member member = postService.checkMember(member_id);
-        return postService.write(member, postDto);
-    }
-
-    @PostMapping("/test/post/post")
-    public void testWrite(@RequestParam Long member_id, @RequestBody PostPostDto postDto) {
-        // postService.write(member_id, postDto);
-    }
-
-    @Operation(summary = "게시글 삭제 api", description = "\n 글이 삭제되면 value : 삭제 완료"
-            + "\n 글이 없으면 value : 글이 없습니다.")
-    @DeleteMapping("/delete/post")
-    public ResponseEntity<String> deletePost(@RequestParam Long post_id) throws NotFoundException {
-        postService.deletePost(post_id);
-        return ResponseEntity.ok("삭제 완료");
+    @Operation(summary = "게시글 삭제 API", description = "게시글을 삭제합니다.")
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deletePost(@ExtractPost Post post) {
+        postService.deletePost(post);
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 
     @Operation(summary = "게시글 수정 api", description = "JSON넘길 때 null이 하나도 있으면 안됨 꼭 다채워서 넘기기")
@@ -107,13 +93,19 @@ public class PostController {
         return ResponseEntity.ok(postService.putPost(member_id, postDto));
     }
 
-    @Operation(summary = "게시글 좋아요 api", description = "자기가 이 글이 좋아요를 누른거면 Response의 value: 좋아요 완료"
-            + " 좋아요를 취소한거면 value: 좋아요 취소")
-    @PostMapping("/post/like")
-    public ResponseEntity postLikes(@RequestParam Long post_id,
-                                    HttpServletRequest request) throws NotFoundException {
-        Long member_id = getAccessTokenOfMemberId(request);
-        return ResponseEntity.ok(postService.postLikes(post_id, member_id));
+    @Operation(summary = "게시글 좋아요 api")
+    @PostMapping("/likes")
+    public ResponseEntity<?> togglePostLike(@RequestParam Long post_id,
+                                            @RequestParam Long liker_id) {
+        Post updatePost = postService.togglePostLike(post_id, liker_id);
+        return ResponseEntity.ok(updatePost);
+    }
+    @Operation(summary = "게시글 좋아요 취소 API")
+    @DeleteMapping("/{postId}/likes")
+    public ResponseEntity<PostLikeResponseDto> cancelPostLike(@RequestParam Long post_id,
+                                                              @RequestParam Long liker_id) {
+        Post updatedPost = postService.cancelPostLike(post_id, liker_id);
+        return ResponseEntity.ok(PostLikeResponseDto.fromEntity(updatedPost));
     }
 
     @ApiOperation(value = "댓글 신고 횟수 조회")
@@ -126,7 +118,7 @@ public class PostController {
     @GetMapping("/get/like/member/post")
     public ResponseEntity<Object> getLikeMemberPost(HttpServletRequest request) throws NotFoundException {
         Long member_id = getAccessTokenOfMemberId(request);
-        return ResponseEntity.ok(postService.getLikeMemberPost(member_id));
+        return (ResponseEntity<Object>) ResponseEntity.ok();
     }
 
     public Long getAccessTokenOfMemberId(HttpServletRequest request) {

@@ -1,6 +1,5 @@
 package com.example.just.Exception;
 
-import co.elastic.clients.elasticsearch._types.ErrorResponse;
 import com.google.api.gax.rpc.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +23,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(JwtValidationException.class)
     public ResponseEntity<CustomErrorResponse> handleJwtValidException(Exception ex) {
-        log.error("JWT 오류 발생: {}", ex.getMessage());
+
+        log.error("권한 오류 발생: {}", ex.getMessage());
         return CustomErrorResponse.create(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<CustomErrorResponse> handleIllegalStateException(IllegalStateException ex) {
+        log.error("잘못된 상태 오류 발생: {}", ex.getMessage());
+        return CustomErrorResponse.create(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<CustomErrorResponse> handleGeneralException(Exception ex) {

@@ -1,41 +1,35 @@
-package com.example.just.Dto;
+package com.example.just.Dto.Post;
 
 import com.example.just.Dao.Comment;
 import com.example.just.Dao.Member;
+import com.example.just.Dao.PostContent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+//
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 
-public class PostDto {
+public class PutPostDto {
     private Long post_id;
 
-    private String post_content;    //글 내용
+    private PostContent post_content;    //글 내용
 
-    private String post_tag;    //글 태그
-
-    private Long post_like; //공감 회수
+    private List<String> hash_tage;    //글 태그/글 태그
 
     private Long post_picture;
 
     @JsonIgnore
-    private Timestamp post_create_time;  //글 생성 시간
-
+    private Long post_create_time;  //글 생성 시간
     private boolean secret; //글 공개 여부
-
-
-    private String emoticon;     //글 이모티콘
-
-
-    private String post_category; //글 카테고리
 
     @JsonIgnore
     private List<Member> liked_members = new ArrayList<>();
@@ -45,10 +39,6 @@ public class PostDto {
 
     @JsonIgnore
     private List<Comment> comments;
-
-    private int blamed_count;
-
-
 
     public boolean getSecret() {
         return this.secret;
