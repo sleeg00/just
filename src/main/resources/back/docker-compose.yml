@@ -5,17 +5,6 @@ networks:
     driver: bridge
 
 services:
-  influxdb:
-    image: bitnami/influxdb:1.8.5
-    container_name: influxdb
-    ports:
-      - "8086:8086"
-      - "8085:8088"
-    environment:
-      - INFLUXDB_ADMIN_USER_PASSWORD=admin
-      - INFLUXDB_ADMIN_USER_TOKEN=admin
-      - INFLUXDB_HTTP_AUTH_ENABLED=false
-      - INFLUXDB_DB=myk6db
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
@@ -107,32 +96,6 @@ services:
       - "--web.listen-address=:9104"
     ports:
       - 9104:9104
-
-#  mysqld-exporter2:
-#    image: quay.io/prometheus/mysqld-exporter
-#    container_name: mysqld-exporter2
-#    restart: unless-stopped
-#    env_file:
-#      - .env
-#    command:
-#      - "--mysqld.username=${MYSQL_USER}:${MYSQL_PASSWORD}"
-#      - "--mysqld.address=read-2.c9akywoawd8v.ap-northeast-2.rds.amazonaws.com:${MYSQL_PORT}"
-#      - "--web.listen-address=:9105"
-#    ports:
-#      - 9105:9105
-#
-#  mysqld-exporter3:
-#    image: quay.io/prometheus/mysqld-exporter
-#    container_name: mysqld-exporter3
-#    restart: unless-stopped
-#    env_file:
-#      - .env
-#    command:
-#      - "--mysqld.username=${MYSQL_USER}:${MYSQL_PASSWORD}"
-#      - "--mysqld.address=read-3.c9akywoawd8v.ap-northeast-2.rds.amazonaws.com:${MYSQL_PORT}"
-#      - "--web.listen-address=:9106"
-#    ports:
-#      - 9106:9106
 
 
 volumes:

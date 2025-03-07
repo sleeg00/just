@@ -1,4 +1,4 @@
-package com.example.just.auth;
+package com.example.just.jwt.auth;
 
 import com.example.just.Dao.Member;
 import lombok.Getter;

@@ -97,15 +97,8 @@ public class PostController {
     @PostMapping("/likes")
     public ResponseEntity<?> togglePostLike(@RequestParam Long post_id,
                                             @RequestParam Long liker_id) {
-        Post updatePost = postService.togglePostLike(post_id, liker_id);
+        String updatePost = postService.togglePostLike(post_id, liker_id);
         return ResponseEntity.ok(updatePost);
-    }
-    @Operation(summary = "게시글 좋아요 취소 API")
-    @DeleteMapping("/{postId}/likes")
-    public ResponseEntity<PostLikeResponseDto> cancelPostLike(@RequestParam Long post_id,
-                                                              @RequestParam Long liker_id) {
-        Post updatedPost = postService.cancelPostLike(post_id, liker_id);
-        return ResponseEntity.ok(PostLikeResponseDto.fromEntity(updatedPost));
     }
 
     @ApiOperation(value = "댓글 신고 횟수 조회")
