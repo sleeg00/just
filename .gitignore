@@ -1,5 +1,7 @@
 HELP.md
-
+pinpoint*
+pinpoint-agent-*
+pinpoint.config
 .gradle
 *.war
 build

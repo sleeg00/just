@@ -1,12 +1,8 @@
-package com.example.just.Redis;
+package com.example.just.Dto;
 
-
-import javax.persistence.Entity;
 import javax.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
-
-
 
 @Getter
 @Setter

@@ -28,7 +28,6 @@ import com.example.just.Repository.PostContentRepository;
 import com.example.just.Repository.PostLikeRepository;
 
 import com.example.just.Repository.HashTagMapRepository;
-import com.example.just.Repository.PostContentRepository;
 
 import com.example.just.Response.ResponseGetMemberPostDto;
 import com.example.just.Response.ResponsePutPostDto;
@@ -38,21 +37,16 @@ import com.example.just.Repository.MemberRepository;
 import com.example.just.Repository.PostContentESRespository;
 import com.example.just.Repository.PostRepository;
 
+import com.example.just.Util.RedisKeyUtil;
 import com.example.just.jwt.JwtProvider;
 
 import com.google.firebase.database.annotations.Nullable;
 
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.sql.SQLException;
-import java.util.function.Function;
 import javax.persistence.PersistenceContext;
 import javax.sql.DataSource;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 ;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -62,8 +56,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.util.*;
-import java.util.stream.Collectors;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 
 @Service
@@ -76,6 +68,8 @@ public class PostService {
     private final JPAQueryFactory query;
     @Autowired
     private PostRepository postRepository;
+    @Autowired
+    private RedisService redisService;
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
@@ -94,9 +88,11 @@ public class PostService {
     private JwtProvider jwtProvider;
     @Autowired
     private GptService gptService;
+    @Autowired
+    private RedisKeyUtil redisKeyUtil;
 
     @Autowired
-    private PostLikeRepository postLikeRepository;
+    private PostLikeService postLikeService;
     @Autowired
     PostContentESRespository postContentESRespository;
 
@@ -155,7 +151,7 @@ public class PostService {
     public void deletePost(Post post) throws NotFoundException {
 
         postContentESRespository.deleteById(post.getPost_id());
-       // deleteHashTag(post); // 이따 수정
+        // deleteHashTag(post); // 이따 수정
         postRepository.deleteById(post.getPost_id());
     }
 
@@ -166,7 +162,7 @@ public class PostService {
         Post checkPost = checkPost(post_id);
         List<HashTagMap> hashTagMaps = checkPost.getHashTagMaps();
 
-       // deleteHashTag(checkPost);
+        // deleteHashTag(checkPost);
 
         postDto.setPost_content(postDto.getPost_content());
 
@@ -262,8 +258,6 @@ public class PostService {
                             });
         }
     }
-
-
 
 
     public ResponseGetPost searchByCursor(Long cursor, Long limit, Long member_id)
@@ -369,39 +363,18 @@ public class PostService {
 
 
     @Transactional
-    public Post togglePostLike(Long post_id, Long member_id) {    //글 좋아요
-        Member member = checkMember(member_id);
-        Post post = postRepository.findByIdWithLock(post_id)
-                .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."));
-
-        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member, post));
-
-        if (existingLike.isPresent()) {
-            throw new IllegalStateException("이미 좋아요를 누른 게시물입니다.");
-        }
-
-        postLikeRepository.save(new PostLike(member, post));
-        post.setPost_like(post.getPost_like() + 1);
-        return postRepository.save(post);
-    }
-
-
-    @Transactional
-    public Post cancelPostLike(Long post_id, Long member_id) {
+    public String togglePostLike(Long post_id, Long member_id) {    //글 좋아요
         Member member = checkMember(member_id);
         Post post = postRepository.findById(post_id)
                 .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."));
 
-        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member, post));
-
-        if (!existingLike.isPresent()) {
-            throw new IllegalStateException("이미 좋아요를 취소한 게시물입니다.");
+        if (postLikeService.addPostLikeIfNotExists(member, post)) {
+            redisService.incrementLikeCount(post_id);
+            return "좋아요 완료";
+        } else {
+            redisService.decrementLikeCount(post_id);
+            return "좋아요 취소 완료";
         }
-        postLikeRepository.delete(existingLike.get());
-        post.minusPostLike();
 
-        return postRepository.save(post);
     }
-
-
 }

@@ -2,8 +2,9 @@ package com.example.just.Service;
 
 
 import com.example.just.Dao.Member;
-import com.example.just.Redis.Fcm;
 
+
+import com.example.just.Dto.Fcm;
 import com.example.just.Repository.MemberRepository;
 import com.example.just.Repository.NotificationRepository;
 import com.google.firebase.messaging.FirebaseMessaging;
