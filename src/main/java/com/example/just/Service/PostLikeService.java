@@ -13,13 +13,14 @@ public class PostLikeService {
     @Autowired
     private PostLikeRepository postLikeRepository;
 
-    public boolean addPostLikeIfNotExists(Member member, Post post) {
-        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member, post));
+    public boolean addPostLikeIfExists(Long member_id, Long post_id) {
+        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member_id, post_id));
         if (existingLike.isPresent()) {
+            // 삭제 비동기 처리
             return false;
         }
 
-        postLikeRepository.save(new PostLike(member, post));
+        //postLikeRepository.save(new PostLike(member, post)); // 비동기 처리
         return true;
     }
 }
