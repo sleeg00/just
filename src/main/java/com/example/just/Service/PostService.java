@@ -5,30 +5,18 @@ import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
-
-
-import com.example.just.Dao.PostLike;
-
-
 import com.example.just.Dao.QHashTag;
 import com.example.just.Dao.QPost;
 import com.example.just.Document.HashTagDocument;
 import com.example.just.Document.PostDocument;
-
 import com.example.just.Dto.Post.PostPostDto;
 import com.example.just.Dto.Post.PutPostDto;
-
-
 import com.example.just.Exception.NotFoundException;
 import com.example.just.Repository.BlameRepository;
-
 import com.example.just.Repository.HashTagESRepository;
-
 import com.example.just.Repository.PostContentRepository;
 import com.example.just.Repository.PostLikeRepository;
-
 import com.example.just.Repository.HashTagMapRepository;
-
 import com.example.just.Response.ResponseGetMemberPostDto;
 import com.example.just.Response.ResponsePutPostDto;
 import com.example.just.Mapper.PostMapper;
@@ -36,22 +24,21 @@ import com.example.just.Repository.HashTagRepository;
 import com.example.just.Repository.MemberRepository;
 import com.example.just.Repository.PostContentESRespository;
 import com.example.just.Repository.PostRepository;
-
 import com.example.just.Util.RedisKeyUtil;
 import com.example.just.jwt.JwtProvider;
-
 import com.google.firebase.database.annotations.Nullable;
-
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.sql.SQLException;
 import javax.persistence.PersistenceContext;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
-;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
-
-
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
@@ -102,11 +89,14 @@ public class PostService {
     @Autowired
     private HashTagMapRepository hashTagMapRepository;
 
-
+    @Autowired
+    private CacheManager cacheManager;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
     private static final String redisKey = "hashTag::";  // Redis Key Prefix
+    @Autowired
+    private PostLikeRepository postLikeRepository;
 
     public PostService(EntityManager em, JPAQueryFactory query) {
         this.em = em;
@@ -364,17 +354,33 @@ public class PostService {
 
     @Transactional
     public String togglePostLike(Long post_id, Long member_id) {    //글 좋아요
-        Member member = checkMember(member_id);
-        Post post = postRepository.findById(post_id)
-                .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."));
+        Boolean likeStatus = redisService.changePostLikeStatusIfExists(member_id, post_id);
+        if (likeStatus == null) { // Cache Miss Redis 사용 (Cache-Aside 패턴 적용)
+            Boolean insertStatus = postLikeService.addPostLikeIfExists(member_id, post_id);// 없다면 비동기 처리
+           // redisService.insertPostLikeStatus(member_id, post_id, insertStatus); // 회원별 좋아요 상태 등록
+        }
+        //incrementPostLikeCount(post_id); // 좋아요 횟수 증가
 
-        if (postLikeService.addPostLikeIfNotExists(member, post)) {
-            redisService.incrementLikeCount(post_id);
-            return "좋아요 완료";
-        } else {
-            redisService.decrementLikeCount(post_id);
-            return "좋아요 취소 완료";
+        return "ok..";
+    }
+
+    @CachePut(value = "postLikeCount", key = "#postId")
+    private long incrementPostLikeCount(Long postId) {
+        Cache cache = cacheManager.getCache("postLikeCount");
+        Long currentCount = null;
+        if (cache != null) {
+            currentCount = cache.get(postId, Long.class);
+        }
+        // Cache Miss
+        if (currentCount == null) {
+            currentCount = postRepository.findById(postId)
+                    .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."))
+                    .getPost_like();
         }
 
+        long newCount = currentCount + 1;
+        // 비동기로 update Query 날려야함.
+        return newCount;
     }
+
 }
