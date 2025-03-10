@@ -25,5 +25,19 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
     Long countAllByPost(Post post);
 
-    PostLike findByMemberAndPost(Long member_id, Long post_id);
+    @Query("SELECT pl FROM PostLike pl WHERE pl.member.id = :memberId AND pl.post.post_id = :postId")
+    PostLike findByMemberAndPost(@Param("memberId") Long memberId, @Param("postId") Long postId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM PostLike pl WHERE pl.member.id = :memberId AND pl.post.post_id = :postId")
+    void deleteByMemberAndPost(@Param("memberId") Long memberId, @Param("postId") Long postId);
+
+
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO post_like (member_id, post_id) VALUES (:memberId, :postId)", nativeQuery = true)
+    void saveMemberAndPost(@Param("memberId") Long memberId, @Param("postId") Long postId);
+
+
 }
