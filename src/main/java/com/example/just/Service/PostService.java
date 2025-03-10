@@ -1,6 +1,5 @@
 package com.example.just.Service;
 
-
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Member;
@@ -29,21 +28,22 @@ import com.example.just.jwt.JwtProvider;
 import com.google.firebase.database.annotations.Nullable;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.security.Key;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.PersistenceContext;
 import javax.sql.DataSource;
+import org.hibernate.graph.Graph;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.util.*;
-
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 @Service
 public class PostService {
@@ -90,17 +90,17 @@ public class PostService {
     private HashTagMapRepository hashTagMapRepository;
 
     @Autowired
-    private CacheManager cacheManager;
-    @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    private final Cache<Long, AtomicLong> postLikeCache;
 
-    private static final String redisKey = "hashTag::";  // Redis Key Prefix
+
     @Autowired
     private PostLikeRepository postLikeRepository;
 
-    public PostService(EntityManager em, JPAQueryFactory query) {
+    public PostService(EntityManager em, JPAQueryFactory query, Cache<Long, AtomicLong> postLikeCache) {
         this.em = em;
         this.query = new JPAQueryFactory(em);
+        this.postLikeCache = postLikeCache;
     }
 
 
@@ -357,30 +357,40 @@ public class PostService {
         Boolean likeStatus = redisService.changePostLikeStatusIfExists(member_id, post_id);
         if (likeStatus == null) { // Cache Miss Redis 사용 (Cache-Aside 패턴 적용)
             Boolean insertStatus = postLikeService.addPostLikeIfExists(member_id, post_id);// 없다면 비동기 처리
-           // redisService.insertPostLikeStatus(member_id, post_id, insertStatus); // 회원별 좋아요 상태 등록
+            redisService.insertPostLikeStatus(member_id, post_id, insertStatus); // 회원별 좋아요 상태 등록
         }
-        //incrementPostLikeCount(post_id); // 좋아요 횟수 증가
-
+        if (likeStatus) {
+            incrementPostLikeCount(member_id, post_id); // 전체 좋아요 횟수 증가
+        } else {
+            decrementPostLikeCount(member_id, post_id);
+        }
         return "ok..";
     }
 
-    @CachePut(value = "postLikeCount", key = "#postId")
-    private long incrementPostLikeCount(Long postId) {
-        Cache cache = cacheManager.getCache("postLikeCount");
-        Long currentCount = null;
-        if (cache != null) {
-            currentCount = cache.get(postId, Long.class);
-        }
-        // Cache Miss
-        if (currentCount == null) {
-            currentCount = postRepository.findById(postId)
-                    .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."))
-                    .getPost_like();
-        }
 
-        long newCount = currentCount + 1;
-        // 비동기로 update Query 날려야함.
-        return newCount;
+    @Transactional // 트랜잭션 범위 내에서 캐시 및 DB 업데이트가 이루어지도록 함
+    private void incrementPostLikeCount(Long memberId, Long postId) {
+        AtomicLong counter = getPostLikeCacheCount(postId);
+        counter.incrementAndGet(); // CAS 연산
+
+        postRepository.incrementPostLike(postId);
+        postLikeRepository.saveMemberAndPost(memberId, postId);
     }
 
+    @Transactional // 트랜잭션 범위 내에서 캐시 및 DB 업데이트가 이루어지도록 함
+    private void decrementPostLikeCount(Long memberId, Long postId) {
+        AtomicLong counter = getPostLikeCacheCount(postId);
+        counter.decrementAndGet(); // CAS 연산
+
+        postRepository.decrementPostLike(postId);
+        postLikeRepository.deleteByMemberAndPost(memberId, postId);
+    }
+
+    private AtomicLong getPostLikeCacheCount(Long postId) {
+        return postLikeCache.asMap().computeIfAbsent(postId, k ->
+                new AtomicLong(postRepository.findById(postId)
+                        .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."))
+                        .getPost_like()));
+
+    }
 }
