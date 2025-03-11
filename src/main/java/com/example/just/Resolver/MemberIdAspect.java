@@ -4,7 +4,8 @@ package com.example.just.Resolver;
 import com.example.just.Dao.Member;
 import com.example.just.Repository.MemberRepository;
 import com.example.just.jwt.JwtProvider;
-import javax.servlet.http.HttpServletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;

@@ -1,16 +1,13 @@
 package com.example.just.Repository;
 
-import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 import com.example.just.Dao.PostLike;
 import io.lettuce.core.dynamic.annotation.Param;
-import javax.persistence.LockModeType;
-import javax.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface PostLikeRepository extends JpaRepository<PostLike, Long> {

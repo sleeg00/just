@@ -2,9 +2,9 @@ package com.example.just.Repository;
 
 import com.example.just.Dao.Post;
 
+import jakarta.persistence.LockModeType;
 import java.util.Optional;
-import javax.persistence.LockModeType;
-import javax.transaction.Transactional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 

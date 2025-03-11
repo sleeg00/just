@@ -1,8 +1,11 @@
 package com.example.just.Service;
 
 import com.example.just.Util.RedisKeyUtil;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -28,11 +31,10 @@ public class RedisService {
         String postLikeKey = redisKeyUtil.getPostLikeKey(post_id);
         String trueValue = member_id + ":true";
         String falseValue = member_id + ":false";
-        Double now = Double.valueOf(System.currentTimeMillis()/1000); // ms로 변환
+        Double now = Double.valueOf(System.currentTimeMillis() / 1000); // ms로 변환
 
         Double scoreTrue = redisTemplate.opsForZSet().score(postLikeKey, trueValue);
         Double scoreFalse = redisTemplate.opsForZSet().score(postLikeKey, falseValue);
-
 
         if (scoreTrue != null && scoreTrue <= now) {
             redisTemplate.opsForZSet().remove(postLikeKey, trueValue);
@@ -66,4 +68,17 @@ public class RedisService {
 
         redisTemplate.opsForZSet().add(postLikeKey, value, expireAt);
     }
+
+    public void savePostLikeOfStream(Long memberId, Long postId, Boolean isLiked) {
+        String STREAM_NAME = redisKeyUtil.getPostLikeStreamName();
+        MapRecord<String, String, String> record = MapRecord.create(STREAM_NAME, Map.of(
+                "postId", postId.toString(),
+                "memberId", memberId.toString(),
+                "isLiked", Boolean.toString(isLiked)
+        ));
+
+        redisTemplate.opsForStream().add(record);
+
+    }
+
 }
