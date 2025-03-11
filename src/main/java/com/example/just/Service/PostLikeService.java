@@ -37,20 +37,17 @@ public class PostLikeService {
     @Transactional
     public void bulkInsertPostLikes(Set<Pair<Long, Long>> likeSet) {
         if (likeSet.isEmpty()) return;
+        String sql = "INSERT INTO post_like (member_id, post_id) VALUES ";
 
-        int batchSize = 1000;
-        int count = 0;
-
+        List<String> values = new ArrayList<>();
         for (Pair<Long, Long> pair : likeSet) {
-            PostLike postLike = new PostLike(pair.getFirst(), pair.getSecond());
-            em.persist(postLike); // 영속성 컨텍스트에 저장
-
-            if (++count % batchSize == 0) {
-                em.flush(); // DB 반영
-                em.clear(); // 영속성 컨텍스트 초기화
-            }
+            values.add("(" + pair.getFirst() + ", " + pair.getSecond() + ")");
         }
+        sql += String.join(", ", values);
+
+        em.createNativeQuery(sql).executeUpdate();
     }
+
 
     @Transactional
     public void bulkDeletePostLikes(Set<Pair<Long, Long>> unlikeSet) {
