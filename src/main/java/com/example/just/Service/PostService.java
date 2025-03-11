@@ -350,7 +350,6 @@ public class PostService {
         } else {
             decrementPostLikeCount(post_id);
         }
-        System.out.println("여긴가" + member_id +" "  +post_id + " " + isLiked);
         redisService.savePostLikeOfStream(member_id, post_id, isLiked); // 비동기 Stream
     }
 

@@ -26,8 +26,17 @@ public class RedisConfig {
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
+
+        // ✅ Key와 Hash Key는 일반 String으로 저장
         template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+
+        // ✅ Value도 String으로 저장하여, Redis CLI에서 읽을 때 깨지지 않도록 설정
         template.setValueSerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new StringRedisSerializer());
+
+        template.afterPropertiesSet();
         return template;
     }
+
 }
