@@ -1,26 +1,70 @@
 package com.example.just.Service;
 
-import com.example.just.Dao.Member;
-import com.example.just.Dao.Post;
+
+
 import com.example.just.Dao.PostLike;
 import com.example.just.Repository.PostLikeRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PostLikeService {
+    @PersistenceContext
+    private EntityManager em;
     @Autowired
     private PostLikeRepository postLikeRepository;
+
 
     public boolean addPostLikeIfExists(Long member_id, Long post_id) {
         Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member_id, post_id));
         if (existingLike.isPresent()) {
-            postLikeRepository.deleteByMemberAndPost(member_id, post_id);
             return false;
         }
 
-        postLikeRepository.saveMemberAndPost(member_id, post_id); // 비동기 처리
         return true;
     }
+
+
+    @Transactional
+    public void bulkInsertPostLikes(Set<Pair<Long, Long>> likeSet) {
+        if (likeSet.isEmpty()) return;
+
+        int batchSize = 1000;
+        int count = 0;
+
+        for (Pair<Long, Long> pair : likeSet) {
+            PostLike postLike = new PostLike(pair.getFirst(), pair.getSecond());
+            em.persist(postLike); // 영속성 컨텍스트에 저장
+
+            if (++count % batchSize == 0) {
+                em.flush(); // DB 반영
+                em.clear(); // 영속성 컨텍스트 초기화
+            }
+        }
+    }
+
+    @Transactional
+    public void bulkDeletePostLikes(Set<Pair<Long, Long>> unlikeSet) {
+        if (unlikeSet.isEmpty()) return;
+
+        String sql = "DELETE FROM post_like WHERE (member_id, post_id) IN ";
+        List<String> values = new ArrayList<>();
+
+        for (Pair<Long, Long> pair : unlikeSet) {
+            values.add("(" + pair.getFirst() + ", " + pair.getSecond() + ")");
+        }
+
+        sql += "(" + String.join(", ", values) + ")";
+        em.createNativeQuery(sql).executeUpdate();
+    }
+
 }

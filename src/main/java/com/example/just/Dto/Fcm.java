@@ -1,8 +1,12 @@
 package com.example.just.Dto;
 
-import javax.persistence.Id;
+
+import jakarta.persistence.Id;
+
 import lombok.Getter;
+
 import lombok.Setter;
+
 
 @Getter
 @Setter

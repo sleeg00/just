@@ -3,7 +3,8 @@ package com.example.just.Resolver;
 import com.example.just.Dao.Post;
 import com.example.just.Exception.NotFoundException;
 import com.example.just.Repository.PostRepository;
-import javax.servlet.http.HttpServletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;

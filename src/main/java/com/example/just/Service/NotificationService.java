@@ -8,11 +8,10 @@ import com.example.just.Repository.MemberRepository;
 import com.example.just.Repository.NotificationRepository;
 import com.example.just.Repository.PostRepository;
 import com.example.just.jwt.JwtProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Date;
 

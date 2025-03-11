@@ -2,20 +2,16 @@ package com.example.just.Controller;
 
 import com.example.just.Dao.Comment;
 import com.example.just.Dto.*;
-
 import com.example.just.Dto.Post.PutCommentDto;
-
 import com.example.just.Response.ResponseCommentDto;
 import com.example.just.Response.ResponsePostCommentDto;
 import com.example.just.Response.ResponsePostCommentDtoBefore;
 import com.example.just.Service.CommentService;
 import com.example.just.jwt.JwtProvider;
-import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import javax.servlet.http.HttpServletRequest;
-
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -90,13 +86,13 @@ public class CommentController {
         return ResponseEntity.ok(new ResponseCommentDto(comment,member_id,"입력 완료"));
     }
 
-    @ApiOperation(value = "댓글 조회 API")
+   // @ApiOperation(value = "댓글 조회 API")
     @GetMapping("v2/get/{post_id}/comments")
     public ResponseEntity<ResponsePostCommentDto> getCommentList(@PathVariable Long post_id, HttpServletRequest req) {
         return ResponseEntity.ok(commentService.getCommentList(post_id, req));
     }
 
-    @ApiOperation(value = "댓글 조회 API")
+   // @ApiOperation(value = "댓글 조회 API")
     @GetMapping("v1/get/{post_id}/comments")
     public ResponseEntity<ResponsePostCommentDtoBefore> getCommentListBefore(@PathVariable Long post_id,
                                                                              HttpServletRequest req) {
@@ -109,7 +105,7 @@ public class CommentController {
         return commentService.deleteComment(post_id, comment_id);
     }
 
-    @ApiOperation(value = "댓글 수정")
+  //  @ApiOperation(value = "댓글 수정")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200",description = "댓글 내용"),
             @ApiResponse(responseCode = "400",description = "댓글이 존재하지 않습니다.\n게시물이 존재하지 않습니다.")
@@ -121,19 +117,19 @@ public class CommentController {
         return commentService.putComment(post_id, comment_id, commentDto);
     }
 
-    @ApiOperation(value = "댓글 신고")
+   // @ApiOperation(value = "댓글 신고")
     @PostMapping("/post/comment/{post_id}/{comment_id}")
     public ResponseEntity<String> blameComment(@PathVariable Long post_id, @PathVariable Long comment_id) {
         return commentService.blameComment(post_id, comment_id);
     }
 
-    @ApiOperation(value = "댓글 신고 횟수 조회")
+  //  @ApiOperation(value = "댓글 신고 횟수 조회")
     @GetMapping("/get/comment/blame/{post_id}/{comment_id}")
     public int blameGetComment(@PathVariable Long post_id, @PathVariable Long comment_id) {
         return commentService.blameGetComment(post_id, comment_id);
     }
 
-    @ApiOperation(value = "댓글 좋아요")
+   // @ApiOperation(value = "댓글 좋아요")
     @PostMapping("/post/like/comment/{postId}/{commentId}")
     public void likeComment(@PathVariable Long postId, @PathVariable Long commentId,
                             HttpServletRequest req) {
@@ -142,7 +138,7 @@ public class CommentController {
         commentService.likeComment(postId, commentId, member_id);
     }
 
-    @ApiOperation(value = "자신의 댓글 조회")
+    //@ApiOperation(value = "자신의 댓글 조회")
     @GetMapping("/get/member/comment")
     public ResponseEntity getMyComment(HttpServletRequest request) {
         Long member_id = 0L;

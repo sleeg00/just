@@ -6,11 +6,10 @@ import static com.example.just.Util.DbConstUtil.HIBERNATE_DIALECT;
 
 import com.example.just.Config.DataSoruce.ReplicationDataSourceProperties.Read;
 import com.zaxxer.hikari.HikariDataSource;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 
