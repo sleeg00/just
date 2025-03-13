@@ -97,7 +97,19 @@ services:
     ports:
       - 9104:9104
 
+  rabbitmq:
+    image: "rabbitmq:management"
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"  # RabbitMQ management UI
+      - "5672:5672"    # RabbitMQ AMQP protocol port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest  # 기본 사용자
+      RABBITMQ_DEFAULT_PASS: guest  # 기본 비밀번호
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # 데이터 지속성을 위한 볼륨
 
 volumes:
   grafana:
   prometheus_data:
+  rabbitmq_data:
