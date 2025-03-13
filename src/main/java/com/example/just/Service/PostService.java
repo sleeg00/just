@@ -1,5 +1,6 @@
 package com.example.just.Service;
 
+import com.example.just.Consumer.PostLikeConsumer;
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Member;
@@ -11,6 +12,7 @@ import com.example.just.Dao.QPost;
 import com.example.just.Dto.PostPostDto;
 import com.example.just.Dto.PutPostDto;
 import com.example.just.Exception.NotFoundException;
+import com.example.just.Producer.PostLikeProducer;
 import com.example.just.Repository.BlameRepository;
 import com.example.just.Repository.PostContentRepository;
 import com.example.just.Repository.PostLikeRepository;
@@ -81,6 +83,8 @@ public class PostService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private PostLikeProducer postLikeProducer;
     private final Cache<Long, AtomicLong> postLikeCache;
 
 
@@ -350,7 +354,12 @@ public class PostService {
         } else {
             decrementPostLikeCount(post_id);
         }
-        redisService.savePostLikeOfStream(member_id, post_id, isLiked); // 비동기 Stream
+        try {
+            postLikeProducer.sendPostLikeMessage(post_id, member_id, isLiked);
+        } catch (Exception e) {
+            System.err.println("Error sending message to RabbitMQ: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Transactional // 트랜잭션 범위 내에서 캐시 및 DB 업데이트가 이루어지도록 함
@@ -372,4 +381,8 @@ public class PostService {
                         .getPost_like()));
 
     }
+
+
+
+
 }
