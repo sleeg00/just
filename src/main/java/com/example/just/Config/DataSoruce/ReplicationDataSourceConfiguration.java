@@ -2,20 +2,17 @@ package com.example.just.Config.DataSoruce;
 
 
 import static com.example.just.Util.DbConstUtil.BASE_PACKAGES;
-import static com.example.just.Util.DbConstUtil.DATA_SOURCE;
 import static com.example.just.Util.DbConstUtil.HIBERNATE_DIALECT;
 
 import com.example.just.Config.DataSoruce.ReplicationDataSourceProperties.Read;
 import com.zaxxer.hikari.HikariDataSource;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
@@ -83,10 +80,10 @@ public class ReplicationDataSourceConfiguration {
         AbstractJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
 
         adapter.setGenerateDdl(false);
-        adapter.setShowSql(false);
+        adapter.setShowSql(true);
         adapter.setDatabasePlatform(HIBERNATE_DIALECT);
 
-        jpaProperties.setShowSql(false);
+        jpaProperties.setShowSql(true);
         jpaProperties.setGenerateDdl(false);
 
         return new EntityManagerFactoryBuilder(adapter, jpaProperties.getProperties(), null);

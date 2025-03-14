@@ -1,32 +1,31 @@
 package com.example.just.Controller;
 
 
+import com.example.just.Dto.PostPostDto;
+import com.example.just.Dto.PutPostDto;
 import com.example.just.Resolver.ExtractMember;
 import com.example.just.Resolver.ExtractPost;
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
-import com.example.just.Dto.Post.PostLikeResponseDto;
-import com.example.just.Dto.Post.PostPostDto;
-import com.example.just.Dto.Post.PutPostDto;
+
 import com.example.just.Repository.MemberRepository;
 import com.example.just.Service.PostService;
 import com.example.just.jwt.JwtProvider;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import java.sql.SQLException;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 
 
 @RequestMapping("/api/posts")
-@Api(tags = {"post controller"}, description = "게시글 관련 api")
+@Tag(name = "post controller")
 @RestController
 public class PostController {
 
@@ -97,24 +96,17 @@ public class PostController {
     @PostMapping("/likes")
     public ResponseEntity<?> togglePostLike(@RequestParam Long post_id,
                                             @RequestParam Long liker_id) {
-        Post updatePost = postService.togglePostLike(post_id, liker_id);
+        String updatePost = postService.togglePostLike(post_id, liker_id);
         return ResponseEntity.ok(updatePost);
     }
-    @Operation(summary = "게시글 좋아요 취소 API")
-    @DeleteMapping("/{postId}/likes")
-    public ResponseEntity<PostLikeResponseDto> cancelPostLike(@RequestParam Long post_id,
-                                                              @RequestParam Long liker_id) {
-        Post updatedPost = postService.cancelPostLike(post_id, liker_id);
-        return ResponseEntity.ok(PostLikeResponseDto.fromEntity(updatedPost));
-    }
 
-    @ApiOperation(value = "댓글 신고 횟수 조회")
+    @Operation(summary = "게시글 신고")
     @GetMapping("/get/post/blame/{postId}")
     public int blameGetComment(@PathVariable Long postId) throws NotFoundException {
         return postService.blameGetPost(postId);
     }
 
-    @ApiOperation(value = "자신이 좋아요한 글 조회")
+    @Operation(summary = "자신이 좋아요한 글 조회")
     @GetMapping("/get/like/member/post")
     public ResponseEntity<Object> getLikeMemberPost(HttpServletRequest request) throws NotFoundException {
         Long member_id = getAccessTokenOfMemberId(request);

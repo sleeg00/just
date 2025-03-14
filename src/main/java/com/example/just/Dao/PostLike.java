@@ -1,14 +1,15 @@
 package com.example.just.Dao;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,7 +37,11 @@ public class PostLike {
     @JoinColumn(name = "post_id")
     private Post post;
 
-    public PostLike(Member member, Post post) {
+    public PostLike(Long member_id, Long post_id) {
+        Member member = new Member();
+        member.setId(member_id);
+        Post post = new Post();
+        post.setPost_id(post_id);
         this.member = member;
         this.post = post;
     }

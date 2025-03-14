@@ -1,16 +1,13 @@
 package com.example.just.Repository;
 
-import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 import com.example.just.Dao.PostLike;
 import io.lettuce.core.dynamic.annotation.Param;
-import javax.persistence.LockModeType;
-import javax.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
@@ -25,5 +22,19 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
     Long countAllByPost(Post post);
 
-    PostLike findByMemberAndPost(Member member, Post post);
+    @Query("SELECT pl FROM PostLike pl WHERE pl.member.id = :memberId AND pl.post.post_id = :postId")
+    PostLike findByMemberAndPost(@Param("memberId") Long memberId, @Param("postId") Long postId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM PostLike pl WHERE pl.member.id = :memberId AND pl.post.post_id = :postId")
+    void deleteByMemberAndPost(@Param("memberId") Long memberId, @Param("postId") Long postId);
+
+
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO post_like (member_id, post_id) VALUES (:memberId, :postId)", nativeQuery = true)
+    void saveMemberAndPost(@Param("memberId") Long memberId, @Param("postId") Long postId);
+
+
 }

@@ -10,12 +10,11 @@ import com.example.just.Repository.MemberRepository;
 import com.example.just.Repository.PostRepository;
 import com.example.just.Response.ResponseBlameDto;
 import com.example.just.jwt.JwtProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 

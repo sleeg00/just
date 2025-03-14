@@ -1,69 +1,44 @@
 package com.example.just.Service;
 
-
+import com.example.just.Consumer.PostLikeConsumer;
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
-
-
-import com.example.just.Dao.PostLike;
-
-
 import com.example.just.Dao.QHashTag;
 import com.example.just.Dao.QPost;
-import com.example.just.Document.HashTagDocument;
-import com.example.just.Document.PostDocument;
-
-import com.example.just.Dto.Post.PostPostDto;
-import com.example.just.Dto.Post.PutPostDto;
 
 
+import com.example.just.Dto.PostPostDto;
+import com.example.just.Dto.PutPostDto;
 import com.example.just.Exception.NotFoundException;
+import com.example.just.Producer.PostLikeProducer;
 import com.example.just.Repository.BlameRepository;
-
-import com.example.just.Repository.HashTagESRepository;
-
 import com.example.just.Repository.PostContentRepository;
 import com.example.just.Repository.PostLikeRepository;
-
 import com.example.just.Repository.HashTagMapRepository;
-import com.example.just.Repository.PostContentRepository;
-
 import com.example.just.Response.ResponseGetMemberPostDto;
 import com.example.just.Response.ResponsePutPostDto;
 import com.example.just.Mapper.PostMapper;
 import com.example.just.Repository.HashTagRepository;
 import com.example.just.Repository.MemberRepository;
-import com.example.just.Repository.PostContentESRespository;
 import com.example.just.Repository.PostRepository;
-
+import com.example.just.Util.RedisKeyUtil;
 import com.example.just.jwt.JwtProvider;
-
 import com.google.firebase.database.annotations.Nullable;
-
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.sql.SQLException;
-import java.util.function.Function;
-import javax.persistence.PersistenceContext;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.sql.DataSource;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-;
 import org.springframework.data.redis.core.RedisTemplate;
-
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import javax.persistence.EntityManager;
 import java.util.*;
-import java.util.stream.Collectors;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
+import com.github.benmanes.caffeine.cache.Cache;
 
 
 @Service
@@ -77,14 +52,14 @@ public class PostService {
     @Autowired
     private PostRepository postRepository;
     @Autowired
+    private RedisService redisService;
+    @Autowired
     private MemberRepository memberRepository;
     @Autowired
     private HashTagRepository hashTagRepository;
     @Autowired
     private PostContentRepository postContentRepository;
 
-    @Autowired
-    private HashTagESRepository hashTagESRepository;
     @Autowired
     private BlameRepository blameRepository;
     @Autowired
@@ -94,11 +69,11 @@ public class PostService {
     private JwtProvider jwtProvider;
     @Autowired
     private GptService gptService;
+    @Autowired
+    private RedisKeyUtil redisKeyUtil;
 
     @Autowired
-    private PostLikeRepository postLikeRepository;
-    @Autowired
-    PostContentESRespository postContentESRespository;
+    private PostLikeService postLikeService;
 
     @Autowired
     private HashTagService hashTagService;
@@ -106,15 +81,20 @@ public class PostService {
     @Autowired
     private HashTagMapRepository hashTagMapRepository;
 
-
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private PostLikeProducer postLikeProducer;
+    private final Cache<Long, AtomicLong> postLikeCache;
 
-    private static final String redisKey = "hashTag::";  // Redis Key Prefix
 
-    public PostService(EntityManager em, JPAQueryFactory query) {
+    @Autowired
+    private PostLikeRepository postLikeRepository;
+
+    public PostService(EntityManager em, JPAQueryFactory query, Cache<Long, AtomicLong> postLikeCache) {
         this.em = em;
         this.query = new JPAQueryFactory(em);
+        this.postLikeCache = postLikeCache;
     }
 
 
@@ -148,14 +128,11 @@ public class PostService {
         post.setHashTagMaps(hashTagMaps);
         Post returnPost = postRepository.save(post);
 
-        postContentESRespository.save(new PostDocument(post));
         return returnPost;
     }
 
     public void deletePost(Post post) throws NotFoundException {
 
-        postContentESRespository.deleteById(post.getPost_id());
-       // deleteHashTag(post); // 이따 수정
         postRepository.deleteById(post.getPost_id());
     }
 
@@ -166,7 +143,7 @@ public class PostService {
         Post checkPost = checkPost(post_id);
         List<HashTagMap> hashTagMaps = checkPost.getHashTagMaps();
 
-       // deleteHashTag(checkPost);
+        // deleteHashTag(checkPost);
 
         postDto.setPost_content(postDto.getPost_content());
 
@@ -174,8 +151,6 @@ public class PostService {
 
         Post p = postRepository.save(checkPost);
         hashTagService.saveHashTag(postDto.getHash_tage(), p);
-
-        postContentESRespository.save(new PostDocument(checkPost));
 
         ResponsePutPostDto responsePutPostDto = new ResponsePutPostDto(p);
         return responsePutPostDto;
@@ -211,12 +186,10 @@ public class PostService {
                 HashTag newHashTag = new HashTag(hashTags.get(i));
                 newHashTag.setTagCount(1L);
                 newHashTag = hashTagRepository.save(newHashTag);
-                hashTagESRepository.save(new HashTagDocument(newHashTag));
                 hashTagMap = new HashTagMap(newHashTag, p); //객체 그래프 설정
             } else {
                 hashTag.setTagCount(hashTag.getTagCount() + 1);
                 hashTagRepository.save(hashTag);
-                hashTagESRepository.save(new HashTagDocument(hashTag));
                 hashTagMap = new HashTagMap(hashTag, p); //객체 그래프 설정
             }
             hashTagMapRepository.save(hashTagMap);
@@ -235,8 +208,6 @@ public class PostService {
         if (post == null) {
             throw new NotFoundException();
         } else {
-            // Elasticsearch에서 해당 포스트의 내용 삭제
-            postContentESRespository.deleteById(post_id);
             deleteHashTag(post);
             postRepository.deleteById(post_id);
         }
@@ -253,17 +224,13 @@ public class PostService {
                             hashTag -> {
                                 if (hashTag.getTagCount() != 1) {
                                     hashTag.setTagCount(hashTag.getTagCount() - 1);
-                                    hashTagESRepository.save(new HashTagDocument(hashTag));
                                     hashTagRepository.save(hashTag);
                                 } else {
-                                    hashTagESRepository.deleteById(hashTag.getId());
                                     hashTagRepository.deleteById(hashTag.getId());
                                 }
                             });
         }
     }
-
-
 
 
     public ResponseGetPost searchByCursor(Long cursor, Long limit, Long member_id)
@@ -369,39 +336,53 @@ public class PostService {
 
 
     @Transactional
-    public Post togglePostLike(Long post_id, Long member_id) {    //글 좋아요
-        Member member = checkMember(member_id);
-        Post post = postRepository.findByIdWithLock(post_id)
-                .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."));
-
-        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member, post));
-
-        if (existingLike.isPresent()) {
-            throw new IllegalStateException("이미 좋아요를 누른 게시물입니다.");
+    public String togglePostLike(Long post_id, Long member_id) {    //글 좋아요
+        Boolean likeStatus = redisService.changePostLikeStatusIfExists(member_id, post_id);
+        if (likeStatus == null) { // Cache Miss Redis 사용 (Cache-Aside 패턴 적용)
+            Boolean insertStatus = postLikeService.addPostLikeIfExists(member_id, post_id);// 없다면 비동기 처리
+            redisService.insertPostLikeStatus(member_id, post_id, insertStatus); // 회원별 좋아요 상태 등록
+            handlePostLikeChange(insertStatus, member_id, post_id);
+        } else {
+            handlePostLikeChange(likeStatus, member_id, post_id);
         }
+        return "ok..";
+    }
 
-        postLikeRepository.save(new PostLike(member, post));
-        post.setPost_like(post.getPost_like() + 1);
-        return postRepository.save(post);
+    private void handlePostLikeChange(Boolean isLiked, Long member_id, Long post_id) {
+        if (isLiked) {
+            incrementPostLikeCount(post_id);
+        } else {
+            decrementPostLikeCount(post_id);
+        }
+        try {
+            postLikeProducer.sendPostLikeMessage(post_id, member_id, isLiked);
+        } catch (Exception e) {
+            System.err.println("Error sending message to RabbitMQ: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Transactional // 트랜잭션 범위 내에서 캐시 및 DB 업데이트가 이루어지도록 함
+    private void incrementPostLikeCount(Long postId) {
+        AtomicLong counter = getPostLikeCacheCount(postId);
+        counter.incrementAndGet(); // CAS 연산
+    }
+
+    @Transactional // 트랜잭션 범위 내에서 캐시 및 DB 업데이트가 이루어지도록 함
+    private void decrementPostLikeCount(Long postId) {
+        AtomicLong counter = getPostLikeCacheCount(postId);
+        counter.decrementAndGet(); // CAS 연산
+    }
+
+    private AtomicLong getPostLikeCacheCount(Long postId) {
+        return postLikeCache.asMap().computeIfAbsent(postId, k ->
+                new AtomicLong(postRepository.findById(postId)
+                        .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."))
+                        .getPost_like()));
+
     }
 
 
-    @Transactional
-    public Post cancelPostLike(Long post_id, Long member_id) {
-        Member member = checkMember(member_id);
-        Post post = postRepository.findById(post_id)
-                .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다."));
-
-        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member, post));
-
-        if (!existingLike.isPresent()) {
-            throw new IllegalStateException("이미 좋아요를 취소한 게시물입니다.");
-        }
-        postLikeRepository.delete(existingLike.get());
-        post.minusPostLike();
-
-        return postRepository.save(post);
-    }
 
 
 }

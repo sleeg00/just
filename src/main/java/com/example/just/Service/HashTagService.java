@@ -3,8 +3,6 @@ package com.example.just.Service;
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Post;
-import com.example.just.Document.HashTagDocument;
-import com.example.just.Repository.HashTagESRepository;
 import com.example.just.Repository.HashTagMapRepository;
 import com.example.just.Repository.HashTagRepository;
 import java.util.List;
@@ -17,8 +15,6 @@ import org.springframework.stereotype.Service;
 public class HashTagService {
     @Autowired
     private HashTagRepository hashTagRepository;
-    @Autowired
-    private HashTagESRepository hashTagESRepository;
     @Autowired
     private HashTagMapRepository hashTagMapRepository;
 
@@ -33,10 +29,6 @@ public class HashTagService {
                 .collect(Collectors.toList());
 
         hashTagRepository.saveAll(updatedTags);
-        hashTagESRepository
-                .saveAll(updatedTags.stream()
-                        .map(HashTagDocument::new)
-                        .collect(Collectors.toList())); // Stream은 1회성이라서
 
         // HashTagMap 저장
         List<HashTagMap> hashTagMaps = updatedTags.stream()

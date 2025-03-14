@@ -2,7 +2,7 @@ package com.example.just.Service;
 
 import com.example.just.Dao.Member;
 import com.example.just.Repository.MemberRepository;
-import com.example.just.auth.PrincipalDetails;
+import com.example.just.jwt.auth.PrincipalDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

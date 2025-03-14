@@ -3,17 +3,17 @@ package com.example.just.Service;
 import com.example.just.Dao.Comment;
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
-import com.example.just.Document.PostDocument;
+
 import com.example.just.Dto.*;
 import com.example.just.Dto.Post.PutCommentDto;
 
 import com.example.just.Repository.CommentRepository;
 import com.example.just.Repository.MemberRepository;
-import com.example.just.Repository.PostContentESRespository;
 import com.example.just.Repository.PostRepository;
 import com.example.just.Response.ResponseCommentDtoBefore;
 import com.example.just.Response.ResponseMyCommentDto;
 import com.example.just.Response.ResponsePostCommentDtoBefore;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,8 +21,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
-import javax.transaction.Transactional;
 
 import com.example.just.jwt.JwtProvider;
 import com.example.just.Response.ResponsePostCommentDto;
@@ -36,6 +34,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CommentService {
@@ -54,8 +53,6 @@ public class CommentService {
     @Autowired
     private JwtProvider jwtProvider;
 
-    @Autowired
-    PostContentESRespository postContentESRespository;
 
     public Comment createComment(Long postId, Long member_id, CommentDto commentDto) {
         // 부모 댓글이 있는 경우, 해당 부모 댓글을 가져옴
@@ -91,10 +88,8 @@ public class CommentService {
 //            notificationService.send(receiver.get(), "bigComment", parentComment.getComment_id(), member_id);
 
         } else if (parentComment == null) {
-            PostDocument postDocument = postContentESRespository.findById(postId).get();
-            postDocument.setCommentSize(postDocument.getCommentSize() + 1);
-            postContentESRespository.save(postDocument);
-//            notificationService.send(receiver.get(), "comment", post.getPost_id(), member_id);
+
+
         }
 
         return commentRepository.save(comment);
@@ -145,9 +140,7 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("부모 댓글이 존재하지 않습니다."));
         comment.setChildren(null);
-        PostDocument postDocument = postContentESRespository.findById(postId).get();
-        postDocument.setCommentSize(postDocument.getCommentSize() - 1);
-        postContentESRespository.save(postDocument);
+
         commentRepository.deleteById(commentId);
         return ResponseEntity.ok("ok");
     }

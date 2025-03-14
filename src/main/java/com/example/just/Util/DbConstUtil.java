@@ -16,5 +16,5 @@ public final class DbConstUtil {
     public static final String ENTITY_MANAGER_FACTORY = "entityManagerFactory";
     public static final String TRANSACTION_MANAGER = "transactionManager";
     public static final String ENTITY_MANAGER = "entityManager";
-    public static final String HIBERNATE_DIALECT = "org.hibernate.dialect.MySQL5Dialect";
+    public static final String HIBERNATE_DIALECT = "org.hibernate.dialect.MySQL8Dialect";
 }

@@ -1,24 +1,21 @@
 package com.example.just.Controller;
 
 import com.example.just.Service.BlameService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-
 @RestController
-@Api(tags = {"blame controller"},description = "신고 관련 api")
 @RequestMapping("/api")
 public class BlameController {
     @Autowired
     private BlameService blameService;
 
-    @ApiOperation(value = "회원 신고 API" )
+  //  @ApiOperation(value = "회원 신고 API" )
     @PostMapping(value = "/blame/{type_index}/member/{target_member_id}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "{\n"
@@ -36,7 +33,7 @@ public class BlameController {
     public ResponseEntity writeMemberBlame(HttpServletRequest request, @PathVariable Long type_index, @PathVariable Long target_member_id){
         return blameService.writeMemberBlame(request,target_member_id,type_index);
     }
-    @ApiOperation(value = "게시글 신고 API" )
+   // @ApiOperation(value = "게시글 신고 API" )
     @PostMapping(value = "/blame/{type_index}/post/{target_post_id}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "{\n"
@@ -55,7 +52,7 @@ public class BlameController {
         return blameService.writePostBlame(request,target_post_id,type_index);
     }
 
-    @ApiOperation(value = "댓글 신고 API")
+   // @ApiOperation(value = "댓글 신고 API")
     @PostMapping(value = "/blame/{type_index}/comment/{target_comment_id}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "{\n"
@@ -74,7 +71,7 @@ public class BlameController {
         return blameService.writeCommentBlame(request,target_comment_id,type_index);
     }
 
-    @ApiOperation(value = "회원 신고 취소 API" )
+  //  @ApiOperation(value = "회원 신고 취소 API" )
     @DeleteMapping(value = "/blame/member/{target_member_id}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "{\n"
@@ -88,7 +85,7 @@ public class BlameController {
         return blameService.deleteMemberBlame(request,target_member_id);
     }
 
-    @ApiOperation(value = "게시글 신고 취소 API" )
+  //  @ApiOperation(value = "게시글 신고 취소 API" )
     @DeleteMapping(value = "/blame/post/{target_post_id}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "{\n"
@@ -102,7 +99,7 @@ public class BlameController {
         return blameService.deletePostBlame(request,target_post_id);
     }
 
-    @ApiOperation(value = "댓글 신고 취소 API" )
+    //@ApiOperation(value = "댓글 신고 취소 API" )
     @DeleteMapping(value = "/blame/comment/{target_comment_id}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "{\n"
@@ -116,25 +113,25 @@ public class BlameController {
         return blameService.deleteCommentBlame(request,target_comment_id);
     }
 
-    @ApiOperation(value = "신고받은횟수 상위 멤버 조회")
+  //  @ApiOperation(value = "신고받은횟수 상위 멤버 조회")
     @GetMapping(value = "/blamed/member")
     public ResponseEntity viewBlamedMember(){
         return blameService.getBlamedList("member");
     }
 
-    @ApiOperation(value = "신고받은횟수 상위 게시글 조회")
+   // @ApiOperation(value = "신고받은횟수 상위 게시글 조회")
     @GetMapping(value = "/blamed/post")
     public ResponseEntity viewBlamedPost(){
         return blameService.getBlamedList("post");
     }
 
-    @ApiOperation(value = "신고받은횟수 상위 댓글 조회")
+  //  @ApiOperation(value = "신고받은횟수 상위 댓글 조회")
     @GetMapping(value = "/blamed/comment")
     public ResponseEntity viewBlamedComment(){
         return blameService.getBlamedList("comment");
     }
 
-    @ApiOperation(value = "신고한 횟수 상위 멤버 조회")
+   // @ApiOperation(value = "신고한 횟수 상위 멤버 조회")
     @GetMapping(value = "/blame/member")
     public ResponseEntity viewBlameMember(){
         return blameService.getBlameList();
