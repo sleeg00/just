@@ -1,7 +1,96 @@
+version: '3.8'
+
+networks:
+  elk:
+    driver: bridge
+
 services:
-  myapp:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     ports:
-      - "9000:9000"
+      - 9100:9100
+  grafana:
+    image: grafana/grafana
+    ports:
+      - '3000:3000'
+    volumes:
+      - grafana:/var/lib/grafana
+
+
+  # 프로메테우스 설정
+  prometheus:
+    image: prom/prometheus:v2.24.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 9090:9090
+    restart: always
+#  # Spring Boot 설정
+#  spring_boot:
+#    container_name: spring_boot
+#    image: sleeg00/just:backend
+#    expose:
+#      - 9000
+#    ports:
+#      - 9000:9000
+#    networks:
+#      - elk
+
+#  # Redis 설정
+#  my-redis:
+#    container_name: my-redis
+#    image: redis:latest
+#    ports:
+#      - 6379:6379  # 호스트와 컨테이너의 포트 매핑
+#    volumes:
+#      - ./redis.conf:/usr/local/etc/redis/redis.conf  # Redis 설정 파일
+#    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]  # 설정 파일 사용
+#    networks:
+#      - elk
+    # RDS_Exporter 설정
+#  mysqld-exporter:
+#    image: quay.io/prometheus/mysqld-exporter
+#    container_name: mysqld-exporter
+#    restart: unless-stopped
+#    env_file:
+#      - .env
+#    command:
+#      - "--mysqld.username=${MYSQL_USER}:${MYSQL_PASSWORD}"
+#      - "--mysqld.address=test.c9akywoawd8v.ap-northeast-2.rds.amazonaws.com:${MYSQL_PORT}"
+#      - "--web.listen-address=:9104"
+#    ports:
+#      - 9104:9104
+#
+#  rabbitmq:
+#    image: "rabbitmq:management"
+#    container_name: rabbitmq
+#    ports:
+#      - "15672:15672"  # RabbitMQ management UI
+#      - "5672:5672"    # RabbitMQ AMQP protocol port
+#    environment:
+#      RABBITMQ_DEFAULT_USER: guest  # 기본 사용자
+#      RABBITMQ_DEFAULT_PASS: guest  # 기본 비밀번호
+#    volumes:
+#      - rabbitmq_data:/var/lib/rabbitmq  # 데이터 지속성을 위한 볼륨
+
+volumes:
+  grafana:
+  prometheus_data:
+  rabbitmq_data:

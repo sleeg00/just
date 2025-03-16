@@ -30,11 +30,9 @@ public class QPost extends EntityPathBase<Post> {
 
     public final ListPath<HashTagMap, QHashTagMap> hashTagMaps = this.<HashTagMap, QHashTagMap>createList("hashTagMaps", HashTagMap.class, QHashTagMap.class, PathInits.DIRECT2);
 
-    public final ListPath<Member, QMember> likedMembers = this.<Member, QMember>createList("likedMembers", Member.class, QMember.class, PathInits.DIRECT2);
-
     public final QMember member;
 
-    public final DateTimePath<java.util.Date> post_create_time = createDateTime("post_create_time", java.util.Date.class);
+    public final NumberPath<Long> post_create_time = createNumber("post_create_time", Long.class);
 
     public final NumberPath<Long> post_id = createNumber("post_id", Long.class);
 
@@ -42,7 +40,7 @@ public class QPost extends EntityPathBase<Post> {
 
     public final NumberPath<Long> post_picture = createNumber("post_picture", Long.class);
 
-    public final ListPath<String, StringPath> postContent = this.<String, StringPath>createList("postContent", String.class, StringPath.class, PathInits.DIRECT2);
+    public final QPostContent postContent;
 
     public final BooleanPath secret = createBoolean("secret");
 
@@ -65,6 +63,7 @@ public class QPost extends EntityPathBase<Post> {
     public QPost(Class<? extends Post> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.member = inits.isInitialized("member") ? new QMember(forProperty("member")) : null;
+        this.postContent = inits.isInitialized("postContent") ? new QPostContent(forProperty("postContent"), inits.get("postContent")) : null;
     }
 
 }

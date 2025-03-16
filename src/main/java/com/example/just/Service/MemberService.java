@@ -7,16 +7,12 @@ import com.example.just.Dto.MemberDto;
 import com.example.just.Dto.TokenDto;
 import com.example.just.Mapper.MemberMapper;
 import com.example.just.Repository.MemberRepository;
-import com.example.just.jwt.JwtFilter;
 import com.example.just.jwt.JwtProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -46,28 +42,28 @@ public class MemberService {
         String accesstoken = null;
         String refreshtoken = null;
         if(token == null) return new ResponseEntity<>("리프레시 토큰이 없습니다.",HttpStatus.OK);
-        else {
-            Member member = memberRepository.findByRefreshToken(token).get();
-            if(member == null) return new ResponseEntity<>("해당 멤버가 없습니다.",HttpStatus.OK);
-            Member newMember = Member.builder()
-                    .email(member.getEmail())
-                    .provider(member.getProvider())
-                    .provider_id(member.getProvider_id())
-                    .authority(Role.ROLE_USER)
-                    .nickname(member.getNickname())
-                    .blameCount(0)
-                    .blamedCount(0)
-                    .refreshToken(null)
-                    .build();
-            memberRepository.save(newMember);
-            accesstoken = jwtProvider.createaccessToken(newMember);
-            refreshtoken = jwtProvider.createRefreshToken(newMember);
-            newMember.setRefreshToken(refreshtoken);
-            memberRepository.save(newMember);
-            HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, "Bearer " + accesstoken);
-            httpHeaders.add("refresh_token",refreshtoken);
-        }
+//        else {
+//            Member member = memberRepository.findByRefreshToken(token).get();
+//            if(member == null) return new ResponseEntity<>("해당 멤버가 없습니다.",HttpStatus.OK);
+//            Member newMember = Member.builder()
+//                    .email(member.getEmail())
+//                    .provider(member.getProvider())
+//                    .provider_id(member.getProvider_id())
+//                    .authority(Role.ROLE_USER)
+//                    .nickname(member.getNickname())
+//                    .blameCount(0)
+//                    .blamedCount(0)
+//                    .refreshToken(null)
+//                    .build();
+//            memberRepository.save(newMember);
+//            accesstoken = jwtProvider.createaccessToken(newMember);
+//            refreshtoken = jwtProvider.createRefreshToken(newMember);
+//            newMember.setRefreshToken(refreshtoken);
+//            memberRepository.save(newMember);
+//            HttpHeaders httpHeaders = new HttpHeaders();
+//            httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, "Bearer " + accesstoken);
+//            httpHeaders.add("refresh_token",refreshtoken);
+//        }
         return new ResponseEntity<>(new TokenDto(accesstoken,refreshtoken), HttpStatus.OK);
     }
     public ResponseEntity drop(HttpServletRequest request){

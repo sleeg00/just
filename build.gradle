@@ -1,125 +1,140 @@
-
-
 plugins {
-	id 'org.springframework.boot' version '2.7.7'
-	id 'io.spring.dependency-management' version '1.0.14.RELEASE'
-	id 'java'
+    id 'org.springframework.boot' version '3.1.0'  // ✅ Spring Boot 3.x로 변경
+    id 'io.spring.dependency-management' version '1.1.3'
+    id 'java'
 }
 
 jar {
-	enabled = false;
+    enabled = false;
 }
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 
-sourceCompatibility = '11'
+sourceCompatibility = '17'  // ✅ Java 17 필수 (Spring Boot 3.x 요구 사항)
+
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
-ext {
-	set('springCloudVersion', "2022.0.1")
-}
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+
+    // ✅ Spring Boot 기본 스타터
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // ✅ QueryDSL 최신 버전
+    // 끝에 :jakarta 추가
+    implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
+// 끝에 :jpa를 :jakarta로 수정
+    annotationProcessor("com.querydsl:querydsl-apt:5.0.0:jakarta")
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+
+    testImplementation 'org.projectlombok:lombok:1.18.22'
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+    // ✅ JSON 라이브러리 (Jackson이 Spring Boot 기본 지원)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
+
+    // ✅ MySQL 드라이버 최신 버전
+    implementation 'mysql:mysql-connector-java:8.0.33'
+
+    // ✅ SLF4J & Logback 최신 버전
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+    implementation 'ch.qos.logback:logback-classic:1.4.6'
+
+    // ✅ Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // ✅ Spring Boot 3.x용 Elasticsearch 최신 버전
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
 
-// queryDSL 설정
-	implementation "com.querydsl:querydsl-jpa"
-	implementation "com.querydsl:querydsl-core"
-	implementation "com.querydsl:querydsl-collections"
-	annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jpa" // querydsl JPAAnnotationProcessor 사용 지정
-	annotationProcessor "jakarta.annotation:jakarta.annotation-api" // java.lang.NoClassDefFoundError (javax.annotation.Generated) 대응 코드
-	annotationProcessor "jakarta.persistence:jakarta.persistence-api" // java.lang.NoClassDefFoundError (javax.annotation.Entity) 대응 코드
+
+    // ✅ JWT (JSON Web Token) 최신 버전
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    implementation 'com.auth0:java-jwt:4.4.0'
+
+    // ✅ Spring Security 최신 버전
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-oauth2-client'
+
+    // ✅ Gson (JSON 파싱)
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // ✅ MapStruct 최신 버전
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    // ✅ Local Cache - Caffeine 최신 버전
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.5'
+
+    // ✅ JOOQ 최신 버전
+    implementation 'org.jooq:jooq:3.17.6'
+    implementation 'org.jooq:jooq-meta:3.17.6'
+    implementation 'org.jooq:jooq-codegen:3.17.6'
 
 
-	implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-	//Database
-	implementation 'mysql:mysql-connector-java:8.0.27'
-	runtimeOnly  'mysql:mysql-connector-java:8.0.27'
-	implementation 'com.h2database:h2'
-	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
-	runtimeOnly 'com.h2database:h2'
+    // ✅ Swagger (Spring Boot 3.x에서는 `springdoc-openapi` 사용)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+
+    // ✅ Amazon S3 SDK 최신 버전
+    implementation 'software.amazon.awssdk:s3:2.20.140'
+
+    // ✅ Logstash 최신 버전
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+    // ✅ Prometheus (모니터링)
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // ✅ Redis 최신 버전
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // ✅ Firebase 최신 버전
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
+
+    // ✅ Test 관련 의존성 최신화
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+
+    // RabbitMQ
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'  // RabbitMQ 의존성
 
 
-	//Lombok
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-
-	//Test
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.junit.platform:junit-platform-launcher:1.5.2'
-	testImplementation 'org.junit.jupiter:junit-jupiter:5.5.2'
-
-	//jwt
-	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-	implementation 'com.auth0:java-jwt:4.2.1'
-	implementation 'com.nimbusds:nimbus-jose-jwt:3.10'
-
-	//security
-	implementation 'org.springframework.security:spring-security-core:5.6.0'
-	implementation 'org.springframework.security:spring-security-config:5.5.0'
-	implementation 'org.springframework.security:spring-security-oauth2-client'
-
-	//json
-	dependencies { implementation 'com.google.code.gson:gson:2.8.6' }
-	implementation 'org.bouncycastle:bcprov-jdk15on:1.69'
-
-	//Mapper
-	implementation 'org.mapstruct:mapstruct:1.5.3.Final'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.3.Final'
-	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-
-	//jooq
-	implementation 'org.jooq:jooq:3.15.3'
-	implementation 'org.jooq:jooq-meta:3.15.3'
-	implementation 'org.jooq:jooq-codegen:3.15.3'
-
-	//ElasticSearch
-	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-	//Swagger
-	implementation 'io.springfox:springfox-boot-starter:3.0.0'
-	implementation 'io.springfox:springfox-swagger-ui:3.0.0'
-
-	//AmaZon
-	implementation 'software.amazon.awssdk:s3:2.20.68'
-	implementation 'io.github.flashvayne:chatgpt-spring-boot-starter:1.0.4'
-
-	//logstash
-	implementation 'net.logstash.logback:logstash-logback-encoder:6.6'
-
+    // Spring Batch
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
 }
+
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
 
-// Querydsl 설정부
+// ✅ Querydsl 설정
 def generated = 'src/main/generated'
 
-// querydsl QClass 파일 생성 위치를 지정
 tasks.withType(JavaCompile) {
-	options.getGeneratedSourceOutputDirectory().set(file(generated))
-	options.compilerArgs << "-Xlint:unchecked"
+    options.getGeneratedSourceOutputDirectory().set(file(generated))
+    options.compilerArgs << "-Xlint:unchecked"
 }
 
-// java source set 에 querydsl QClass 위치 추가
 sourceSets {
-	main.java.srcDirs += [ generated ]
+    main.java.srcDirs += [generated]
 }
 
-// gradle clean 시에 QClass 디렉토리 삭제
 clean {
-	delete file(generated)
+    delete file(generated)
 }

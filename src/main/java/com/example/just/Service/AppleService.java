@@ -71,7 +71,7 @@ public class AppleService {
                     .provider("apple")
                     .provider_id(this.userIdFromApple(id))//apple고유 id
                     .nickname(nickname)
-                    .authority(Role.ROLE_USER)
+                    .authority(Role.USER)
                     .blameCount(0)
                     .blamedCount(0)
                     .build();
