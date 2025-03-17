@@ -1,7 +1,6 @@
 package com.example.just.Service;
 
 
-
 import com.example.just.Dao.PostLike;
 import com.example.just.Repository.PostLikeRepository;
 import jakarta.persistence.EntityManager;
@@ -25,18 +24,19 @@ public class PostLikeService {
 
 
     public boolean addPostLikeIfExists(Long member_id, Long post_id) {
-        Optional<PostLike> existingLike = Optional.ofNullable(postLikeRepository.findByMemberAndPost(member_id, post_id));
+        Optional<PostLike> existingLike = postLikeRepository.findByMemberAndPost(member_id, post_id);
         if (existingLike.isPresent()) {
             return false;
         }
-
         return true;
     }
 
 
     @Transactional
     public void bulkInsertPostLikes(Set<Pair<Long, Long>> likeSet) {
-        if (likeSet.isEmpty()) return;
+        if (likeSet.isEmpty()) {
+            return;
+        }
         String sql = "INSERT INTO post_like (member_id, post_id) VALUES ";
 
         List<String> values = new ArrayList<>();
@@ -51,7 +51,9 @@ public class PostLikeService {
 
     @Transactional
     public void bulkDeletePostLikes(Set<Pair<Long, Long>> unlikeSet) {
-        if (unlikeSet.isEmpty()) return;
+        if (unlikeSet.isEmpty()) {
+            return;
+        }
 
         String sql = "DELETE FROM post_like WHERE (member_id, post_id) IN ";
         List<String> values = new ArrayList<>();

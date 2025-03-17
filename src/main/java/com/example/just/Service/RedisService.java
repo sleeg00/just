@@ -16,17 +16,6 @@ public class RedisService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisKeyUtil redisKeyUtil;
 
-    public void incrementLikeCount(Long postId) {
-        String countKey = redisKeyUtil.getPostLikeCountKey(postId);
-        redisTemplate.opsForValue().increment(countKey);
-    }
-
-    public void decrementLikeCount(Long postId) {
-        String countKey = redisKeyUtil.getPostLikeCountKey(postId);
-        redisTemplate.opsForValue().decrement(countKey);
-    }
-
-
     public Boolean changePostLikeStatusIfExists(Long member_id, Long post_id) {
         String postLikeKey = redisKeyUtil.getPostLikeKey(post_id);
         String trueValue = member_id + ":true";
@@ -69,16 +58,5 @@ public class RedisService {
         redisTemplate.opsForZSet().add(postLikeKey, value, expireAt);
     }
 
-    public void savePostLikeOfStream(Long memberId, Long postId, Boolean isLiked) {
-        String STREAM_NAME = redisKeyUtil.getPostLikeStreamName();
-        MapRecord<String, String, String> record = MapRecord.create(STREAM_NAME, Map.of(
-                "postId", postId.toString(),
-                "memberId", memberId.toString(),
-                "isLiked", Boolean.toString(isLiked)
-        ));
-
-        redisTemplate.opsForStream().add(record);
-
-    }
 
 }

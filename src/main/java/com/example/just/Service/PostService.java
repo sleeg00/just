@@ -1,6 +1,5 @@
 package com.example.just.Service;
 
-import com.example.just.Consumer.PostLikeConsumer;
 import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Member;
@@ -94,6 +93,17 @@ public class PostService {
     public PostService(EntityManager em, JPAQueryFactory query, Cache<Long, AtomicLong> postLikeCache) {
         this.em = em;
         this.query = new JPAQueryFactory(em);
+        this.postLikeCache = postLikeCache;
+    }
+
+    public PostService(EntityManager em, JPAQueryFactory query, RedisService redisService,
+                       PostLikeService postLikeService, PostLikeProducer postLikeProducer,
+                       Cache<Long, AtomicLong> postLikeCache) {
+        this.em = em;
+        this.query = new JPAQueryFactory(em);
+        this.redisService = redisService;
+        this.postLikeService = postLikeService;
+        this.postLikeProducer = postLikeProducer;
         this.postLikeCache = postLikeCache;
     }
 
@@ -381,8 +391,4 @@ public class PostService {
                         .getPost_like()));
 
     }
-
-
-
-
 }

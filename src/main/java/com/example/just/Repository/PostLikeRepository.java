@@ -3,6 +3,7 @@ package com.example.just.Repository;
 import com.example.just.Dao.Post;
 import com.example.just.Dao.PostLike;
 import io.lettuce.core.dynamic.annotation.Param;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -23,7 +24,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     Long countAllByPost(Post post);
 
     @Query("SELECT pl FROM PostLike pl WHERE pl.member.id = :memberId AND pl.post.post_id = :postId")
-    PostLike findByMemberAndPost(@Param("memberId") Long memberId, @Param("postId") Long postId);
+    Optional<PostLike> findByMemberAndPost(@Param("memberId") Long memberId, @Param("postId") Long postId);
 
     @Modifying
     @Transactional
