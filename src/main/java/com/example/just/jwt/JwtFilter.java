@@ -8,10 +8,12 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import java.io.IOException;
@@ -29,19 +31,21 @@ public class JwtFilter extends GenericFilterBean {
         this.jwtProvider = jwtProvider;
     }
 
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-       // System.out.println("doFilter");
+
+
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
         String requestURI = httpServletRequest.getRequestURI();
         String accessToken = resolveToken(httpServletRequest);
+        if(accessToken==null) return ;
         String refreshToken = httpServletRequest.getHeader("refresh_token");
         if(StringUtils.hasText(accessToken)&& jwtProvider.validateToken(accessToken)){
             Authentication authentication = jwtProvider.getAuthentication(accessToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-           // System.out.println("정상작동");
-           // System.out.println("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}" + authentication.getName() + requestURI);
+
         }
         else if(!jwtProvider.validateToken(accessToken)&&refreshToken!=null){
             String token= jwtProvider.getMemberFromRefreshToken(refreshToken);

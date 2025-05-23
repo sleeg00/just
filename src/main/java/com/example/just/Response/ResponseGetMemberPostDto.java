@@ -1,9 +1,15 @@
 package com.example.just.Response;
 
 
+import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Post;
 import com.example.just.Dao.PostContent;
+import com.example.just.Dao.QHashTag;
+import com.example.just.Dao.QPost;
+import com.google.firebase.database.annotations.Nullable;
+import com.querydsl.core.Tuple;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,25 +44,30 @@ public class ResponseGetMemberPostDto {
     }
 
 
-    public ResponseGetMemberPostDto(List<Post> results, Long member_id, int i, List<HashTagMap> hashTagMaps) {
+    public static ResponseGetMemberPostDto from(Tuple tuple, @Nullable Long memberId) {
+        QPost post = QPost.post;
+        QHashTag tag = QHashTag.hashTag;
 
-        this.post_id = results.get(i).getPost_id();
-        this.post_content = results.get(i).getPostContent();
-        this.post_picture = results.get(i).getPost_picture();
+        Post p = tuple.get(post);
+        HashTag t = tuple.get(tag);
 
-        this.hash_tag = hashTagMaps.get(0).getHashTag().getName();
-        this.post_create_time = results.get(i).getPost_create_time();
-        this.blamed_count = results.get(i).getBlamedCount();
-        this.secret = false;
-        this.post_like_size = results.get(i).getPost_like();
-        this.comment_size = ((long) results.get(i).getComments().size());
-        if (member_id != -1) {
-            if (results.get(i).getMember().getId() == member_id) {
-                this.mine = true;
-            } else {
-                this.mine = false;
-            }
+        ResponseGetMemberPostDto dto = new ResponseGetMemberPostDto();
+        dto.setPost_id(p.getPost_id());
+        dto.setPost_content(p.getPostContent());
+        dto.setPost_picture(p.getPost_picture());
+        dto.setPost_create_time(p.getPost_create_time());
+        dto.setBlamed_count(p.getBlamedCount());
+        dto.setSecret(p.getSecret());
+        dto.setPost_like_size(p.getPost_like());
+
+        if (t != null) {
+            dto.setHash_tag(t.getName());
         }
+        if (memberId != null) {
+            dto.setMine(p.getMember().getId().equals(memberId));
+        }
+
+        return dto;
     }
 
 }

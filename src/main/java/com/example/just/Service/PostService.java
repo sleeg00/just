@@ -4,10 +4,7 @@ import com.example.just.Dao.HashTag;
 import com.example.just.Dao.HashTagMap;
 import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
-import com.example.just.Dao.QHashTag;
-import com.example.just.Dao.QPost;
-
-
+import com.example.just.Dto.PostCursor;
 import com.example.just.Dto.PostPostDto;
 import com.example.just.Dto.PutPostDto;
 import com.example.just.Exception.NotFoundException;
@@ -16,6 +13,9 @@ import com.example.just.Repository.BlameRepository;
 import com.example.just.Repository.PostContentRepository;
 import com.example.just.Repository.PostLikeRepository;
 import com.example.just.Repository.HashTagMapRepository;
+import com.example.just.Repository.Querydsl.Strategy.SelectLikePostQuery;
+import com.example.just.Repository.Querydsl.Strategy.SelectRecentPostQuery;
+import com.example.just.Repository.Querydsl.Template.AbstractPostQueryTemplate;
 import com.example.just.Response.ResponseGetMemberPostDto;
 import com.example.just.Response.ResponsePutPostDto;
 import com.example.just.Mapper.PostMapper;
@@ -24,13 +24,13 @@ import com.example.just.Repository.MemberRepository;
 import com.example.just.Repository.PostRepository;
 import com.example.just.Util.RedisKeyUtil;
 import com.example.just.jwt.JwtProvider;
-import com.google.firebase.database.annotations.Nullable;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -85,26 +85,26 @@ public class PostService {
     @Autowired
     private PostLikeProducer postLikeProducer;
     private final Cache<Long, AtomicLong> postLikeCache;
+    private final SelectLikePostQuery selectLikePostQuery;
+    private final SelectRecentPostQuery selectRecentPostQuery;
 
 
     @Autowired
     private PostLikeRepository postLikeRepository;
 
-    public PostService(EntityManager em, JPAQueryFactory query, Cache<Long, AtomicLong> postLikeCache) {
-        this.em = em;
-        this.query = new JPAQueryFactory(em);
-        this.postLikeCache = postLikeCache;
-    }
-
     public PostService(EntityManager em, JPAQueryFactory query, RedisService redisService,
                        PostLikeService postLikeService, PostLikeProducer postLikeProducer,
-                       Cache<Long, AtomicLong> postLikeCache) {
+                       Cache<Long, AtomicLong> postLikeCache, SelectLikePostQuery selectLikePostQuery,
+                       SelectRecentPostQuery selectRecentPostQuery) {
         this.em = em;
         this.query = new JPAQueryFactory(em);
         this.redisService = redisService;
         this.postLikeService = postLikeService;
         this.postLikeProducer = postLikeProducer;
         this.postLikeCache = postLikeCache;
+        this.selectLikePostQuery = selectLikePostQuery;
+        this.selectRecentPostQuery = selectRecentPostQuery;
+
     }
 
 
@@ -142,7 +142,6 @@ public class PostService {
     }
 
     public void deletePost(Post post) throws NotFoundException {
-
         postRepository.deleteById(post.getPost_id());
     }
 
@@ -171,20 +170,29 @@ public class PostService {
     }
 
 
-    public ResponseGetPost searchByCursor(Long cursor, Long limit)
-            throws NotFoundException, SQLException { //글 조
-        // Querydsl Impl 생성후 PostRepository 상속
-        List<Tuple> posts = postRepository.findPostsByCursor(cursor, limit);
+    public ResponseGetPost getPostsByRecent(PostCursor cursor) {
+        return getPosts(cursor, selectRecentPostQuery::execute);
+    }
 
-        boolean hasNext = posts.size() > limit;
-        if (!posts.isEmpty() && hasNext) {
-            posts.remove(posts.size() - 1);
-        } else {
+    public ResponseGetPost getPostsByLike(PostCursor cursor) {
+        return getPosts(cursor, selectLikePostQuery::execute);
+    }
+
+    public ResponseGetPost getPosts(PostCursor cursor, Function<PostCursor, List<Tuple>> executor) {
+        List<Tuple> posts = executor.apply(cursor);
+
+        boolean hasNext = posts.size() > 30;
+        System.out.println(posts.size());
+        if (posts.isEmpty() || !hasNext) {
             throw new NoSuchElementException("마지막 페이지입니다.");
         }
+        posts.remove(posts.size() - 1);
 
-        List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(posts, null);
-        return (ResponseGetPost) getPostDtos;
+        List<ResponseGetMemberPostDto> dtos = posts.stream()
+                .map(tuple -> ResponseGetMemberPostDto.from(tuple, null))
+                .toList();
+
+        return new ResponseGetPost(dtos, hasNext);
     }
 
 
@@ -242,23 +250,22 @@ public class PostService {
         }
     }
 
-
-    public ResponseGetPost searchByCursor(Long cursor, Long limit, Long member_id)
-            throws NotFoundException, SQLException { //글 조
-        // Querydsl Impl 생성후 PostRepository 상속
-        List<Tuple> posts = postRepository.findPostsByCursor(cursor, limit);
-
-        boolean hasNext = posts.size() > limit;
-        if (!posts.isEmpty() && hasNext) {
-            posts.remove(posts.size() - 1);
-        } else {
-            throw new NoSuchElementException("마지막 페이지입니다.");
-        }
-
-        List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(posts, member_id);
-
-        return resultPostIds(posts, getPostDtos, hasNext);
-    }
+//    public ResponseGetPost searchByCursor(Long cursor, Long limit, Long member_id)
+//            throws NotFoundException, SQLException { //글 조
+//        // Querydsl Impl 생성후 PostRepository 상속
+//        List<Tuple> posts = postRepository.findPostsByCursor(cursor, limit);
+//
+//        boolean hasNext = posts.size() > limit;
+//        if (!posts.isEmpty() && hasNext) {
+//            posts.remove(posts.size() - 1);
+//        } else {
+//            throw new NoSuchElementException("마지막 페이지입니다.");
+//        }
+//
+//        List<ResponseGetMemberPostDto> getPostDtos = createResponseGetMemberPostDto(posts, member_id);
+//
+//        return resultPostIds(posts, getPostDtos, hasNext);
+//    }
 
 
     //@Cacheable(cacheNames = "hashTag", key = "#hash_ids")
@@ -297,37 +304,6 @@ public class PostService {
         ResponseGetPost responseGetPost = new ResponseGetPost(
                 getPostDtos, hasNext);
         return responseGetPost;
-    }
-
-
-    private List<ResponseGetMemberPostDto> createResponseGetMemberPostDto(List<Tuple> results,
-                                                                          @Nullable Long member_id) {
-
-        List<ResponseGetMemberPostDto> getPostDtos = new ArrayList<>();
-
-        for (Tuple tuple : results) {
-            ResponseGetMemberPostDto dto = new ResponseGetMemberPostDto();
-            Post post = tuple.get(QPost.post);
-            HashTag hashTag = tuple.get(QHashTag.hashTag);
-            dto.setPost_id(post.getPost_id());
-            dto.setPost_content(post.getPostContent());
-            dto.setPost_picture(post.getPost_picture());
-            dto.setPost_create_time(post.getPost_create_time());
-            dto.setBlamed_count(post.getBlamedCount());
-            dto.setSecret(post.getSecret());
-            dto.setPost_like_size(post.getPost_like());
-            // 해시태그 정보 매핑 (hashTag가 존재하는 경우)
-            if (hashTag != null) {
-                dto.setHash_tag(hashTag.getName());
-            }
-            // 회원 ID 비교 (게시글 작성자와 현재 요청한 회원)
-
-            if (member_id != null) {
-                dto.setMine(post.getMember().getId().equals(member_id));
-            }
-            getPostDtos.add(dto);
-        }
-        return getPostDtos;
     }
 
 
@@ -391,4 +367,6 @@ public class PostService {
                         .getPost_like()));
 
     }
+
+
 }

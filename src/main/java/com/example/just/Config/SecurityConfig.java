@@ -33,7 +33,8 @@ public class SecurityConfig {
             "/api/**/send",
             "/api/**/token",
             "/actuator/**",
-            "/api/**"
+            "/api/**",
+            "/api/posts/**"
     };
 
 
@@ -53,11 +54,13 @@ public class SecurityConfig {
     }
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
+
         return (web) -> web.ignoring().requestMatchers(
                 "/v3/api-docs/**",
                 "/swagger-ui/**",
                 "/swagger-ui.html",
-                "/api/**"
+                "/api/**",
+                "/api/posts/**"
         );
     }
 

@@ -1,6 +1,7 @@
 package com.example.just.Controller;
 
 
+import com.example.just.Dto.PostCursor;
 import com.example.just.Dto.PostPostDto;
 import com.example.just.Dto.PutPostDto;
 import com.example.just.Resolver.ExtractMember;
@@ -9,7 +10,9 @@ import com.example.just.Dao.Member;
 import com.example.just.Dao.Post;
 
 import com.example.just.Repository.MemberRepository;
+import com.example.just.Response.ResponseGetPostDto;
 import com.example.just.Service.PostService;
+import com.example.just.SortType;
 import com.example.just.jwt.JwtProvider;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,8 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 
 
 @RequestMapping("/api/posts")
@@ -38,29 +41,55 @@ public class PostController {
     private MemberRepository memberRepository;
 
 
-    @Operation(
-            summary = "비회원용 최근 게시글 조회",
-            description = "cursor(기준 시간)를 바탕으로 최근 게시글을 조회합니다."
-    )
-    @GetMapping("/recent")
-    public ResponseEntity<?> getRecentPosts(
-            @RequestParam Long cursor,
-            @RequestParam(defaultValue = "30") Long size) throws NotFoundException {
-        try {
-            return ResponseEntity.ok(postService.searchByCursor(cursor, size));
-        } catch (SQLException e) {
-            return ResponseEntity.notFound().build();
+    @Operation(summary = "비회원용 게시글 조회 - 최신순", description = "cursor를 기준으로 최신순 게시글을 조회합니다.")
+    @PostMapping("/posts/recent")
+    public ResponseEntity<?> getRecentPosts(@RequestBody PostCursor postCursor) throws NotFoundException {
+
+            return ResponseEntity.ok(postService.getPostsByRecent(postCursor));
+    }
+
+    @Operation(summary = "좋아요순 게시글 조회 (커서 기반)", description = "좋아요순 정렬 기준으로 페이징된 게시글을 조회합니다.")
+    @PostMapping("/posts/like")
+    public ResponseEntity<?> getPostsByLike(@RequestBody PostCursor postCursor) {
+        return ResponseEntity.ok(postService.getPostsByLike(postCursor));
+    }
+    @PostMapping("/posts/member/recent")
+    public ResponseEntity<?> getRecentMemberPosts(
+            @RequestBody PostCursor postCursor, @ExtractMember Member member) throws NotFoundException {
+        if (member!=null) {
+            postCursor.setMemberId(member.getId());
         }
+
+        return ResponseEntity.ok(postService.getPostsByRecent(postCursor));
+    }
+
+    @Operation(summary = "좋아요순 게시글 조회 (커서 기반)", description = "좋아요순 정렬 기준으로 페이징된 게시글을 조회합니다.")
+    @PostMapping("/posts/like")
+    public ResponseEntity<?> getPostsByMemberLike(@RequestBody PostCursor postCursor,
+                                                   @ExtractMember Member member) {
+        if (member!=null) {
+            postCursor.setMemberId(member.getId());
+        }
+        return ResponseEntity.ok(postService.getPostsByLike(postCursor));
     }
 
 
+//    @Operation(summary = "게시글 랜덤하게 조회(회원용) api", description = "자기가 좋아요한 글을 조회했다면"
+//            + "\n like : true 아니라면 like : false 이다.")
+//    @GetMapping("/member")
+//    public ResponseEntity<Object> getMemberPosts(@ExtractMember Member member, @RequestParam Long cursor,
+//                                                 @RequestParam(defaultValue = "30") Long size) {
+//        return ResponseEntity.ok(postService.searchByCursorMember(cursor, size, member.getId()));
+//    }
+//
+//
 //    @Operation(summary = "자기의 게시글을 조회하는 API", description = "<big> 자신의 게시글을 조회한다</big>")
 //    @GetMapping("/my")
 //    public ResponseEntity<Object> getMyPosts(@ExtractMember Member member) throws NotFoundException {
 //        return ResponseEntity.ok(postService.getMyPost(member));
 //    }
 //
-//
+
 //    @Operation(summary = "게시글 랜덤하게 조회(회원용) api", description = "자기가 좋아요한 글을 조회했다면"
 //            + "\n like : true 아니라면 like : false 이다.")
 //    @GetMapping("/member")

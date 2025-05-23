@@ -1,6 +1,8 @@
 package com.example.just.Service;
 import com.example.just.Producer.PostLikeProducer;
 
+import com.example.just.Repository.Querydsl.Strategy.SelectLikePostQuery;
+import com.example.just.Repository.Querydsl.Strategy.SelectRecentPostQuery;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -49,7 +51,8 @@ class PostServiceTest {
         AtomicLong mockCounter = new AtomicLong(10); // 좋아요 개수 10으로 설정
         when(mockCacheMap.computeIfAbsent(eq(postId), any())).thenReturn(mockCounter);
 
-        postService = new PostService(em, query, redisService, postLikeService, postLikeProducer, postLikeCache); // 직접 주입
+        postService = new PostService(em, query, redisService, postLikeService, postLikeProducer,
+                postLikeCache, new SelectLikePostQuery(query), new SelectRecentPostQuery(query)); // 직접 주입
     }
 
     @Test
