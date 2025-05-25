@@ -9,18 +9,28 @@
 
 <br><br>
 ## 🔧 기술 스택
- 언어 <br>
-  ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)<br><br>
- 프레임워크 & 라이브러리 <br>
-  ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white) 
-  ![JPA](https://img.shields.io/badge/JPA-6DB33F?style=for-the-badge&logo=spring&logoColor=white)<br><br>
- 데이터베이스 <br>
-  ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
-  ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)<br><br>
- 자동화 배포 <br>
-  ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
-  ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-  ![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)  <br><br><br>
+**언어**  
+![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)
+
+**프레임워크 & 라이브러리**  
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
+![JPA](https://img.shields.io/badge/JPA-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
+
+**데이터베이스**  
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+
+**모니터링**  
+![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
+![Pinpoint APM](https://img.shields.io/badge/Pinpoint_APM-0080FF?style=for-the-badge&logoColor=white)
+
+**자동화 배포**  
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
+
 
   <br><br>
 ## ⚙️    아키텍쳐 설계 
@@ -48,48 +58,18 @@
 <br><br><br><br>
 
 
-## 📦 맡은 역할과 성능 최적화
-
-### 🔹 대량 요청 처리 최적화 (비동기 큐 활용)
-문제점 파악 
-- API 쓰기 요청 증가 시 성능 저하 문제 발견 → **Pinpoint APM**으로 병목 분석
-  
-해결 과정 탐색
-- **DB 커넥션 획득 과정에서 병목 발생** → 벌크 쿼리 고려했지만, **재시도 로직과 비동기 API 필요성** 확인
-  
-해결 방안 탐색
-- **Redis Pub/Sub → 메시지 유실 위험, Stream → 메모리 사용 부담**
-  
-해결
-- **RabbitMQ 기반 비동기 배치 처리 도입 → 1분 동안 33,000건 부하 테스트, 평균 응답 시간 240ms 유지**  
-
-### 🔹 N+1 문제 해결
-문제점 파악 
-- **조히쿼리에서 응답속도 저하 확인 -> JPA N+1 문제 확인**
-  
-해결 과정 탐색 및 해결
- - **JPA fetch join 활용**하여 연관 엔티티 한 번의 쿼리로 조회,  **배치 크기 조정 (Batch Size 설정)**으로 추가적인 쿼리 최적화  
-
-<br><br>
-### 🔹 인덱스 최적화 (역순 스캔 문제 해결)
-문제점 파악 
-- API에서 **게시글 생성 시간 60만건의 풀 테이블 스캔 발생-> 역순 인덱스로 사용**
-  
-해결 과정 탐색
-- **Real MySQL 분석 결과, 역순 스캔보다 정순 스캔이 잠금 과정에서 성능 우위**
-  
-해결
-- **생성 시간을 음수 변환 후 정순 스캔 적용 → API 응답 시간 160ms → 120ms (25% 개선)**  
-
-<br><br>
-### 🔹 캐시 최적화 (CAS 연산 활용)
-문제점 파악 
-- 로컬 캐시에서 `synchronized` 블록으로 인해 **경합(lock) 문제 발생**
-  
-해결 과정 탐색 및 해결
--  **CAS(Compare-And-Swap) 연산을 활용해 락 없이 안전하게 캐시 갱신**  
- 
-
+## 📦 맡은 역할
+| 구분                     | 상세 내용                                                                   | 효과                          |
+| ---------------------- | ----------------------------------------------------------------------- | --------------------------- |
+| **🗂️ ERD & 요구사항 정의**  | • 전체 도메인 모델링<br>• ERD 작성 ↔ 이해 관계자 리뷰 문서화                                | 개발 범위 명확화 & 테이블 변경 빈도 ↓     |
+| **🛠️ CRUD API 설계·개발** | • Spring Boot 기반 게시글 CRUD·검색 API 구현•  | 게시글 관련 CRUD 기능 설계 및 개발 |
+| **🚀 CI/CD 파이프라인**     | • GitHub Actions + Docker Compose 배포 워크플로 설계<br>• git-secret으로 환경변수 암호화 | 코드 푸시 → 배포 자동화(평균 3 분)      |
+| **📊 실시간 모니터링**        | • Grafana·Prometheus·Pinpoint APM 도입<br>• JVM/DB/Queue 메트릭 대시보드 구축      | 시스템 장애/병목 지점 파악 가능      |
+| **🔍 인덱스 튜닝**          | • EXPLAIN 분석 → Full Scan 구간 식별<br>• 역값 ASC 인덱스 적용                       | 게시글 리스트 API 응답 25 % 단축      |
+| **🗡️ N+1 제거**         | • JPA Fetch Join + Batch Size 설정<br>• 추가 쿼리 90 건 → 1 건 축소               | 요청 당 DB RT 40 ms ↓          |
+| **⚙️ 대량 쓰기 최적화**       | • RabbitMQ 비동기 큐 + 배치 처리<br>• Lock/커넥션 경합 해소                            | 1 분 33 K TPS, 평균 240 ms 유지  |
+| **🔐 인증 로직 개선**        | • 커스텀 `HandlerMethodArgumentResolver`<br>• JWT → 컨트롤러 자동 주입             | 인증 코드 중복 제거 (모듈 결합도↓)       |
+| **🧩 중복 쿼리 리팩터링**      | • Template Method + Hook 패턴 적용<br>• QueryDSL 중복 로직 65 % 제거              | 유지보수 시간 ↓ / 신규 정렬 확장 용이     |
 
 
 
